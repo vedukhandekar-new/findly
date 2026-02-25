@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Findly</title>
+    <style>
+        /* Base page styling to center the form */
+        body { 
+            margin: 0; 
+            background-color: #f8f9fa; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+        }
+        .auth-page-wrapper { 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+        }
+        
+        /* The White Form Card */
+        .auth-card { 
+            background: #ffffff; 
+            width: 100%; 
+            max-width: 450px; 
+            border-radius: 10px; 
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); 
+            padding: 40px; 
+            box-sizing: border-box; 
+        }
+        
+        /* Header Styling */
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-header h2 { color: #2c3e50; margin: 0 0 10px 0; font-size: 24px; }
+        .auth-header p { color: #6c757d; margin: 0; font-size: 14px; }
+        
+        /* Styling Django's Default Form Elements */
+        .django-form p { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .django-form label { font-weight: 600; color: #34495e; margin-bottom: 8px; font-size: 14px; }
+        .django-form input[type="text"], 
+        .django-form input[type="email"], 
+        .django-form input[type="password"], 
+        .django-form select { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 1px solid #ced4da; 
+            border-radius: 6px; 
+            font-size: 15px; 
+            box-sizing: border-box; 
+            transition: border-color 0.3s ease;
+        }
+        .django-form input:focus, 
+        .django-form select:focus { 
+            border-color: #0056b3; 
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15); 
+        }
+        
+        /* Formatting the password requirements list */
+        .django-form ul { 
+            background-color: #f1f3f5; 
+            padding: 15px 15px 15px 35px; 
+            border-radius: 6px; 
+            margin-top: 5px; 
+            margin-bottom: 10px;
+            font-size: 12px; 
+            color: #555; 
+        }
+        .django-form .helptext { 
+            font-size: 12px; 
+            color: #6c757d; 
+            display: block; 
+            margin-top: 5px; 
+        }
+        
+        /* The Submit Button */
+        .btn-primary { 
+            width: 100%; 
+            background-color: #0056b3; 
+            color: #ffffff; 
+            border: none; 
+            padding: 14px; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-top: 15px; 
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover { background-color: #004494; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-page-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Create an Account</h2>
+                <p>Join Findly to start recovering lost items.</p>
+            </div>
+
+            <form method="post" class="django-form">
+                {% csrf_token %}
+                
+                {{ form.as_p }}
+                
+                <button type="submit" class="btn-primary">Sign Up</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

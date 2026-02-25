@@ -1,0 +1,191 @@
+/* --- Global Settings & Background --- */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f4f6f9; 
+    color: #333333;
+}
+
+a { text-decoration: none; }
+
+/* --- Navbar (FindMyLost Style) --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-brand a {
+    font-size: 24px;
+    color: #E3000F; /* FindMyLost Red */
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links a {
+    color: #555555;
+    font-size: 15px;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.nav-links a:hover { color: #E3000F; }
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-link-subtle {
+    color: #555555;
+    font-weight: 600;
+    padding: 8px 12px;
+}
+
+.nav-link-subtle:hover { color: #E3000F; }
+
+/* --- Centered Authentication Card --- */
+.auth-page-wrapper {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.auth-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 450px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.auth-header h2 {
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+    font-size: 26px;
+}
+
+.auth-header p {
+    color: #6c757d;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* --- Form Elements (Django Default Overrides) --- */
+.django-form p {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.django-form label {
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.django-form input[type="text"],
+.django-form input[type="email"],
+.django-form input[type="password"],
+.django-form select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #dce1e6;
+    border-radius: 6px;
+    font-size: 15px;
+    background-color: #fafbfc;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.django-form input:focus,
+.django-form select:focus {
+    border-color: #E3000F;
+    background-color: #ffffff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(227, 0, 15, 0.1);
+}
+
+.django-form ul {
+    background-color: #fff1f2;
+    padding: 12px 12px 12px 30px;
+    border-radius: 6px;
+    border: 1px solid #f8d7da;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #721c24;
+}
+
+.django-form .helptext {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* --- Buttons and Links --- */
+.btn-primary {
+    width: 100%;
+    background-color: #E3000F;
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    border-radius: 30px; /* Pill shape */
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover { background-color: #c4000d; }
+
+.btn-outline {
+    background-color: transparent;
+    color: #E3000F;
+    border: 2px solid #E3000F;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+    background-color: #E3000F;
+    color: #ffffff;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.auth-footer a { color: #E3000F; font-weight: 600; }
+.auth-footer a:hover { text-decoration: underline; }

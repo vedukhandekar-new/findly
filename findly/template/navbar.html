@@ -1,0 +1,37 @@
+<nav class="navbar">
+    <div class="logo">
+        <a href="/" class="logo-text">Findly</a>
+    </div>
+
+    <ul class="nav-links">
+
+        {% if user.is_authenticated %}
+
+            {% if user.role == "Admin" %}
+                <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                <li><a href="#">Manage Users</a></li>
+                <li><a href="#">Reports</a></li>
+                <li><a href="#">Analytics</a></li>
+
+            {% elif user.role == "Owner" %}
+                <li><a href="#">My Lost Items</a></li>
+                <li><a href="#">Report Lost</a></li>
+                <li><a href="#">Notifications</a></li>
+
+            {% elif user.role == "Finder" %}
+                <li><a href="#">Found Items</a></li>
+                <li><a href="#">Report Found</a></li>
+                <li><a href="#">Messages</a></li>
+
+            {% endif %}
+
+            <li><a href="/logout/">Logout</a></li>
+
+        {% else %}
+            <li><a href="/login/">Login</a></li>
+            <li><a href="{% url 'owner_signup' %}" class="signup-btn">Sign Up</a></li>
+        {% endif %}
+
+    </ul>
+</nav>
+

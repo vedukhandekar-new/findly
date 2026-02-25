@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-page-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>Welcome Back</h2>
+            <p>Login to Findly to manage your lost and found items.</p>
+        </div>
+        
+        <form method="post" class="django-form">
+            {% csrf_token %}
+            
+            {{ form.as_p }}
+            
+            <button type="submit" class="btn-primary">Login</button>
+        </form>
+        
+        <div class="auth-footer">
+            Don't have an account? <br><br>
+            <a href="{% url 'signup' %}">Register Here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
