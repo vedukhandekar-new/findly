@@ -37,12 +37,23 @@ class User(AbstractBaseUser):
         ('Owner','Owner'),
         ('Finder','Finder'),
     )
+
+    GENDER_CHOICES = (
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+        ('Other', 'Other'),
+    )
+
     role = models.CharField(max_length=10,choices=role_choice,default='owner')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    first_name = models.CharField(max_length=20,null=True)
+    last_name = models.CharField(max_length=20,null=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES,null=True)
+    mobile = models.BigIntegerField(max_length=15,null=True)
     
     
     objects = UserManager()

@@ -1,4 +1,4 @@
-<nav class="navbar">
+{% comment %} <nav class="navbar">
     <div class="nav-brand"><a href="/">Findly</a></div>
     <ul class="nav-links">
         <li><a href="#">Items I Found</a></li>
@@ -8,5 +8,24 @@
     <div class="nav-actions">
         <a href="#" class="btn-outline">Report Found Item</a>
         <a href="/login/" class="nav-link-subtle">Login</a>
+    </div>
+</nav> {% endcomment %}
+
+
+<nav class="fml-navbar">
+    <a href="{% url 'core:finder_dashboard' %}" class="fml-logo">
+        <span class="highlight">Find</span>ly
+    </a>
+
+    <ul class="fml-nav-links">
+        <li><a href="{% url 'core:finder_dashboard' %}">My Dashboard</a></li>
+        <li><a href="#">Items I Found</a></li>
+        <li><a href="#">Match Requests</a></li>
+    </ul>
+
+    <div class="fml-actions">
+        <a href="#" class="fml-btn">Report Found Item</a>
+        <a href="{% url 'core:login' %}" class="fml-btn-outline">Sign Out</a>
+        <a href="{% url 'core:logout' %}" class="fml-btn-outline">Logout</a>
     </div>
 </nav>

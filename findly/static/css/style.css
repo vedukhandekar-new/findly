@@ -1,112 +1,215 @@
-/* --- Global Settings & Background --- */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* --- CSS Variables --- */
+:root {
+    --red: #E3000F;
+    --red-dark: #b8000c;
+    --red-glow: rgba(227, 0, 15, 0.18);
+    --orange: #FF5A00;
+    --bg: #0f0f10;
+    --bg-card: #17171a;
+    --bg-input: #1f1f24;
+    --border: #2a2a30;
+    --border-focus: #E3000F;
+    --text-primary: #f0f0f2;
+    --text-secondary: #888899;
+    --text-muted: #55555f;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+}
+
+/* --- Global Reset --- */
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
     margin: 0;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f4f6f9; 
-    color: #333333;
+    font-family: var(--font-body);
+    background-color: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 a { text-decoration: none; }
 
-/* --- Navbar (FindMyLost Style) --- */
-.navbar {
+/* ==============================
+   NAVBAR
+   ============================== */
+.navbar, .fml-navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 40px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 18px 50px;
+    background-color: rgba(15, 15, 16, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
     z-index: 1000;
+    transition: background 0.3s;
 }
 
-.nav-brand a {
-    font-size: 24px;
-    color: #E3000F; /* FindMyLost Red */
-    font-weight: bold;
-    letter-spacing: 0.5px;
+.nav-brand a, .fml-logo {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    text-decoration: none;
 }
 
-.nav-links {
+.nav-brand a span, .fml-logo .highlight {
+    color: var(--red);
+}
+
+.nav-links, .fml-nav-links {
     list-style: none;
     display: flex;
-    gap: 30px;
+    gap: 36px;
     margin: 0;
     padding: 0;
+    align-items: center;
 }
 
-.nav-links a {
-    color: #555555;
-    font-size: 15px;
+.nav-links a, .fml-nav-links li a {
+    color: var(--text-secondary);
+    font-size: 14px;
     font-weight: 500;
-    transition: color 0.2s ease;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+    text-decoration: none;
 }
 
-.nav-links a:hover { color: #E3000F; }
+.nav-links a:hover, .fml-nav-links li a:hover {
+    color: var(--text-primary);
+}
 
-.nav-actions {
+.nav-actions, .fml-actions {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
 }
 
-.nav-link-subtle {
-    color: #555555;
-    font-weight: 600;
-    padding: 8px 12px;
+.nav-link-subtle, .fml-btn-outline {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    transition: all 0.25s;
+    text-decoration: none;
+    cursor: pointer;
 }
 
-.nav-link-subtle:hover { color: #E3000F; }
+.nav-link-subtle:hover, .fml-btn-outline:hover {
+    color: var(--text-primary) !important;
+    border-color: #444;
+    background: rgba(255,255,255,0.04);
+}
 
-/* --- Centered Authentication Card --- */
+/* ==============================
+   AUTH PAGE WRAPPER
+   ============================== */
 .auth-page-wrapper {
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 65px);
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 20px;
+    align-items: flex-start;
+    padding: 50px 20px 60px;
+    position: relative;
 }
 
+/* Glowing orb background decoration */
+.auth-page-wrapper::before {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 500px;
+    background: radial-gradient(ellipse at center, rgba(227, 0, 15, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ==============================
+   AUTH CARD
+   ============================== */
 .auth-card {
-    background: #ffffff;
+    background: var(--bg-card);
     width: 100%;
-    max-width: 450px;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    padding: 40px;
-    box-sizing: border-box;
+    max-width: 480px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 44px 40px;
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 24px 60px rgba(0,0,0,0.5),
+        0 0 80px rgba(227, 0, 15, 0.06);
+    position: relative;
+    z-index: 1;
+    animation: cardSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes cardSlideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Top accent line */
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20px; right: 20px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    border-radius: 0 0 2px 2px;
+}
+
+/* ==============================
+   AUTH HEADER
+   ============================== */
 .auth-header {
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 32px;
 }
 
 .auth-header h2 {
-    color: #2c3e50;
-    margin: 0 0 10px 0;
-    font-size: 26px;
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    letter-spacing: -0.5px;
 }
 
 .auth-header p {
-    color: #6c757d;
+    color: var(--text-secondary);
     margin: 0;
     font-size: 14px;
+    font-weight: 400;
 }
 
-/* --- Form Elements (Django Default Overrides) --- */
+/* ==============================
+   DJANGO FORM STYLES
+   ============================== */
 .django-form p {
     display: flex;
     flex-direction: column;
-    margin-bottom: 15px;
+    margin-bottom: 18px;
 }
 
 .django-form label {
-    font-weight: 600;
-    color: #34495e;
-    margin-bottom: 8px;
-    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 7px;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
 }
 
 .django-form input[type="text"],
@@ -114,78 +217,284 @@ a { text-decoration: none; }
 .django-form input[type="password"],
 .django-form select {
     width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #dce1e6;
-    border-radius: 6px;
+    padding: 13px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
     font-size: 15px;
-    background-color: #fafbfc;
-    transition: all 0.3s ease;
+    font-family: var(--font-body);
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    transition: all 0.25s ease;
     box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.django-form input[type="text"]::placeholder,
+.django-form input[type="email"]::placeholder,
+.django-form input[type="password"]::placeholder {
+    color: var(--text-muted);
 }
 
 .django-form input:focus,
 .django-form select:focus {
-    border-color: #E3000F;
-    background-color: #ffffff;
+    border-color: var(--red);
+    background-color: rgba(227, 0, 15, 0.04);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(227, 0, 15, 0.1);
+    box-shadow: 0 0 0 3px var(--red-glow);
 }
 
+/* Select dropdown arrow */
+.django-form select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888899' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+.django-form select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+/* Radio buttons for gender */
+.django-form input[type="radio"] {
+    accent-color: var(--red);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Error messages */
 .django-form ul {
-    background-color: #fff1f2;
-    padding: 12px 12px 12px 30px;
-    border-radius: 6px;
-    border: 1px solid #f8d7da;
-    margin-top: 5px;
-    margin-bottom: 10px;
+    background-color: rgba(227, 0, 15, 0.08);
+    padding: 10px 12px 10px 28px;
+    border-radius: 8px;
+    border: 1px solid rgba(227, 0, 15, 0.25);
+    margin-top: 6px;
+    margin-bottom: 8px;
     font-size: 12px;
-    color: #721c24;
+    color: #ff6b75;
+    list-style-type: disc;
 }
 
 .django-form .helptext {
-    font-size: 12px;
-    color: #6c757d;
+    font-size: 11px;
+    color: var(--text-muted);
     margin-top: 5px;
+    line-height: 1.5;
 }
 
-/* --- Buttons and Links --- */
+/* ==============================
+   BUTTONS
+   ============================== */
 .btn-primary {
     width: 100%;
-    background-color: #E3000F;
+    background: var(--red);
     color: #ffffff;
     border: none;
-    padding: 14px;
-    border-radius: 30px; /* Pill shape */
-    font-size: 16px;
-    font-weight: bold;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-display);
+    letter-spacing: 0.5px;
     cursor: pointer;
-    margin-top: 15px;
-    transition: background-color 0.3s ease;
+    margin-top: 20px;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.btn-primary:hover { background-color: #c4000d; }
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+    pointer-events: none;
+}
 
-.btn-outline {
+.btn-primary:hover {
+    background-color: var(--red-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(227, 0, 15, 0.35);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-outline, .fml-btn-outline {
     background-color: transparent;
-    color: #E3000F;
-    border: 2px solid #E3000F;
-    padding: 8px 20px;
-    border-radius: 30px;
-    font-weight: bold;
-    transition: all 0.3s ease;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border);
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
 }
 
-.btn-outline:hover {
-    background-color: #E3000F;
-    color: #ffffff;
+.btn-outline:hover, .fml-btn-outline:hover {
+    border-color: var(--red);
+    color: var(--red) !important;
+    background: var(--red-glow);
 }
 
+.fml-btn {
+    background-color: var(--red);
+    color: #ffffff !important;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.fml-btn:hover {
+    background-color: var(--red-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(227, 0, 15, 0.3);
+}
+
+/* ==============================
+   AUTH FOOTER
+   ============================== */
 .auth-footer {
     text-align: center;
-    margin-top: 20px;
-    font-size: 14px;
-    color: #6c757d;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--text-muted);
 }
 
-.auth-footer a { color: #E3000F; font-weight: 600; }
-.auth-footer a:hover { text-decoration: underline; }
+.auth-footer a {
+    color: var(--red);
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ==============================
+   DIVIDER
+   ============================== */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ==============================
+   SIGNUP SPECIFIC LAYOUT
+   ============================== */
+
+/* Two column layout for first/last name */
+.name-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+/* Gender radio group */
+.gender-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.gender-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-input);
+}
+
+.gender-option:has(input:checked) {
+    border-color: var(--red);
+    background: var(--red-glow);
+    color: var(--text-primary);
+}
+
+.gender-option input[type="radio"] {
+    display: none;
+}
+
+/* ==============================
+   SECTION HEADINGS IN FORM
+   ============================== */
+.form-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 24px 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ==============================
+   ALERTS / MESSAGES
+   ============================== */
+.alert-banner {
+    background: rgba(227, 0, 15, 0.08);
+    border: 1px solid rgba(227, 0, 15, 0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #ff6b75;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.alert-success {
+    background: rgba(0, 200, 100, 0.08);
+    border-color: rgba(0, 200, 100, 0.2);
+    color: #4ade80;
+}
+
+/* ==============================
+   RESPONSIVE
+   ============================== */
+@media (max-width: 600px) {
+    .auth-card { padding: 30px 24px; }
+    .navbar, .fml-navbar { padding: 15px 20px; }
+    .nav-links, .fml-nav-links { display: none; }
+    .name-row { grid-template-columns: 1fr; }
+    .auth-header h2 { font-size: 24px; }
+}

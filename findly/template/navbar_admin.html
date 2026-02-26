@@ -1,4 +1,4 @@
-<nav class="navbar">
+{% comment %} <nav class="navbar">
     <div class="nav-brand"><a href="/">Findly Admin</a></div>
     <ul class="nav-links">
         <li><a href="#">Monitor Activity</a></li>
@@ -7,5 +7,24 @@
     </ul>
     <div class="nav-actions">
         <a href="/login/" class="nav-link-subtle">Login</a>
+    </div>
+</nav> {% endcomment %}
+
+<nav class="fml-navbar">
+    <a href="{% url 'core:admin_dashboard' %}" class="fml-logo">
+        <span class="highlight">Find</span>ly <span style="font-size: 14px; font-weight: normal; color: #888;">| Admin</span>
+    </a>
+
+    <ul class="fml-nav-links">
+        <li><a href="{% url 'core:admin_dashboard' %}">Dashboard</a></li>
+        <li><a href="#">Manage Users</a></li>
+        <li><a href="#">All Reports</a></li>
+        <li><a href="#">System Settings</a></li>
+    </ul>
+
+    <div class="fml-actions">
+        <span style="font-weight: 600; color: #555;">{{ request.user.email }}</span>
+        <a href="{% url 'core:login' %}" class="fml-btn-outline">Sign Out</a>
+        <a href="{% url 'core:logout' %}" class="fml-btn-outline">Logout</a>
     </div>
 </nav>

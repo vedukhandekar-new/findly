@@ -1,5 +1,251 @@
-<form method="post">
+{% comment %} <form method="POST" action="">
     {% csrf_token %}
-    {{form.as_p}}
+    <label for="email">Email:</label>
+    <input type="email" name="email" id="email">
+    
+    <label for="password">Password:</label>
+    <input type="password" name="password" id="password">
+    
     <button type="submit">Login</button>
-</form>
+</form> {% endcomment %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in - FindMyLost</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Body & Background */
+        body {
+            background-color: #f5f7fa; /* Light greyish-blue background typical of their portal */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333333;
+        }
+
+        /* The Login Card Container */
+        .login-wrapper {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 35px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-top: 5px solid #ef5350; /* FindMyLost signature coral/orange */
+        }
+
+        /* Header Styles */
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .login-header p {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        /* Form Layout */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #34495e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Input Fields */
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dcdde1;
+            border-radius: 4px;
+            font-size: 15px;
+            font-family: 'Montserrat', sans-serif;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #ef5350; /* Brand focus color */
+            box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.15);
+        }
+
+        /* Primary Login Button */
+        .btn-login {
+            width: 100%;
+            background-color: #ef5350; /* Brand coral/orange */
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .btn-login:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Options (Remember me & Forgot Password) */
+        .options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .options a {
+            color: #ef5350;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .options a:hover {
+            text-decoration: underline;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            color: #7f8c8d;
+            cursor: pointer;
+        }
+
+        .remember-me input {
+            margin-right: 8px;
+            accent-color: #ef5350;
+            cursor: pointer;
+        }
+
+        /* Divider for Alternative Login */
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 25px 0;
+            color: #bdc3c7;
+            font-size: 13px;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .divider::before { margin-right: 10px; }
+        .divider::after { margin-left: 10px; }
+
+        /* Secondary Facebook Button (Matching FML functionality) */
+        .btn-facebook {
+            width: 100%;
+            background-color: #3b5998;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-facebook:hover {
+            background-color: #2d4373;
+        }
+
+        /* Bottom Footer Text */
+        .footer-text {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+        
+        .footer-text a {
+            color: #ef5350;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-wrapper">
+        <div class="login-header">
+            <h2>Log in now!</h2>
+            <p>The first Digital Lost Property tool</p>
+        </div>
+
+        <form method="POST" action="{% url 'core:login' %}">
+        {% csrf_token %}
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+            </div>
+
+            <button type="submit" class="btn-login">Log in</button>
+
+            <div class="options">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember"> Remember me
+                </label>
+                <a href="#">Lost your password?</a>
+            </div>
+        </form>
+
+        <div class="divider">OR</div>
+
+        
+
+        <div class="footer-text">
+            Don't have an account? <a href="#">Sign up by email</a>
+        </div>
+    </div>
+
+</body>
+</html>

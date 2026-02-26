@@ -1,4 +1,4 @@
-<nav class="navbar">
+{% comment %} <nav class="navbar">
     <div class="nav-brand"><a href="/">Findly</a></div>
     <ul class="nav-links">
         <li><a href="#">My Lost Items</a></li>
@@ -8,5 +8,25 @@
     <div class="nav-actions">
         <a href="#" class="btn-primary" style="width: auto;">Report Lost Item</a>
         <a href="/login/" class="nav-link-subtle">Login</a>
+    </div>
+</nav> {% endcomment %}
+
+
+<nav class="fml-navbar">
+    <a href="{% url 'owner_dashboard' %}" class="fml-logo">
+        <span class="highlight">Find</span>ly
+    </a>
+
+    <ul class="fml-nav-links">
+        <li><a href="{% url 'owner_dashboard' %}">My Dashboard</a></li>
+        <li><a href="#">My Lost Items</a></li>
+        <li><a href="#">Search Database</a></li>
+    </ul>
+
+    <div class="fml-actions">
+        <a href="#" class="fml-btn">Publish Item</a>
+        <a href="{% url 'login' %}" class="fml-btn-outline">Sign Out</a>
+        <a href="{% url 'logout' %}" class="fml-btn-outline">Logout</a>
+
     </div>
 </nav>

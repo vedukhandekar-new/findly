@@ -1,0 +1,49 @@
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    {% include 'navbar_admin.html' %}
+
+    <h1>Welcome to the Admin Dashboard</h1>
+    <p>Logged in as: {{ request.user.email }}</p>
+
+</body>
+</html> {% endcomment %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        .fml-navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 50px;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .fml-logo { font-size: 26px; font-weight: 800; color: #333333; text-decoration: none; }
+        .fml-logo .highlight { color: #FF5A00; }
+        .fml-nav-links { list-style: none; display: flex; margin: 0; padding: 0; gap: 35px; }
+        .fml-nav-links li a { text-decoration: none; color: #555555; font-weight: 600; }
+        .fml-actions { display: flex; gap: 15px; align-items: center; }
+        .fml-btn { background-color: #FF5A00; color: #ffffff !important; padding: 10px 24px; border-radius: 25px; text-decoration: none; font-weight: 600; }
+        .fml-btn-outline { background-color: transparent; color: #333333 !important; padding: 10px 24px; border-radius: 25px; text-decoration: none; border: 2px solid #eaeaea; font-weight: 600; }
+    </style>
+</head>
+<body>
+    {% include 'navbar_admin.html' %}
+
+    <h1>Welcome to the Admin Dashboard</h1>
+    <p>Logged in as: {{ request.user.email }}</p>
+</body>
+</html>

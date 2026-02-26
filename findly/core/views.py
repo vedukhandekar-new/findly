@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect,HttpResponse
 from .forms import UserSignupForm,UserLoginForm
-from django.contrib.auth import authenticate,login
+from django.contrib.auth import authenticate,login,logout
 # Create your views here.
 def userSignupView(request):
     if request.method =="POST":
@@ -76,6 +76,44 @@ def userSignupView(request):
 #     return render(request, 'core/login.html', {'form': form})
 
 
+# def userLoginView(request):
+#     if request.method == "POST":
+#         form = UserLoginForm(request.POST)
+
+#         if form.is_valid():
+#             email = form.cleaned_data['email']
+#             password = form.cleaned_data['password']
+
+#             # ✅ FIX 1: use username instead of email
+#             user = authenticate(request, email=email, password=password)
+
+#             print("USER OBJECT:", user)
+
+#             if user is not None:
+#                 login(request, user)
+
+#                 if user.role == "owner":
+#                     return redirect("owner_dashboard")
+
+#                 elif user.role == "finder":
+#                     return redirect("finder_dashboard")
+
+#                 # ✅ fallback
+#                 return redirect("core:login")
+
+#             else:
+#                 return render(request, 'core/login.html', {
+#                     'form': form,
+#                     'error': "Invalid email or password"
+#                 })
+
+#         # ✅ FIX 2: return if form invalid
+#         return render(request, 'core/login.html', {'form': form})
+
+#     # ✅ GET request
+#     form = UserLoginForm()
+#     return render(request, 'core/login.html', {'form': form})
+
 def userLoginView(request):
     if request.method == "POST":
         form = UserLoginForm(request.POST)
@@ -84,7 +122,6 @@ def userLoginView(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
 
-            # ✅ FIX 1: use username instead of email
             user = authenticate(request, email=email, password=password)
 
             print("USER OBJECT:", user)
@@ -92,11 +129,15 @@ def userLoginView(request):
             if user is not None:
                 login(request, user)
 
-                if user.role == "owner":
-                    return redirect("owner_dashboard")
+                # ✅ FIX: Only check your custom 'role' field
+                if user.role == "Admin":
+                    return redirect("found:admin_dashboard") # Ensure this matches urls.py
 
-                elif user.role == "finder":
-                    return redirect("finder_dashboard")
+                elif user.role == "Owner":
+                    return redirect("found:owner_dashboard")
+
+                elif user.role == "Finder":
+                    return redirect("found:finder_dashboard")
 
                 # ✅ fallback
                 return redirect("core:login")
@@ -113,3 +154,18 @@ def userLoginView(request):
     # ✅ GET request
     form = UserLoginForm()
     return render(request, 'core/login.html', {'form': form})
+
+
+def user_logout(request):
+    logout(request)
+    return redirect('core:login') 
+
+
+def admin_dashboard(request):
+    return render(request, 'admin_dashboard.html')
+
+def owner_dashboard(request):
+    return render(request, 'owner_dashboard.html')
+
+def finder_dashboard(request):
+    return render(request, 'finder_dashboard.html')
