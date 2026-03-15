@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block navbar %}{% include 'navbar.html' %}{% endblock %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},colors:{zinc:{50:'#FAFAFA',100:'#F4F4F5',200:'#E4E4E7',300:'#D4D4D8',400:'#A1A1AA',500:'#71717A',600:'#52525B',700:'#3F3F46',800:'#27272A',900:'#18181B',950:'#09090B'}}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<div class="min-h-screen flex items-start justify-center pt-16 pb-16 px-4">
+  <div class="w-full max-w-lg">
+
+    <div class="text-center mb-8">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-500 border-emerald-500/20 mb-4">
+        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Found Item Report
+      </span>
+      <h1 class="text-3xl font-extrabold tracking-tight text-zinc-100">Report a Found Item</h1>
+      <p class="text-zinc-400 mt-2 text-sm">Help return this item — describe what you found.</p>
+    </div>
+
+    {% if messages %}{% for msg in messages %}
+      <div class="mb-4 px-4 py-3 rounded-xl border text-sm
+        {% if msg.tags == 'success' %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+        {% else %}bg-red-500/10 border-red-500/20 text-red-400{% endif %}">
+        {{ msg }}
+      </div>
+    {% endfor %}{% endif %}
+
+    <div class="bg-[#121214] border border-white/10 rounded-2xl p-6 shadow-2xl">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <p class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span class="flex-1 h-px bg-white/5"></span> Item Details <span class="flex-1 h-px bg-white/5"></span>
+        </p>
+
+        <div class="space-y-4 mb-6">
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Category</label>
+            {{ form.category }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Description</label>
+            {{ form.description }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">
+              Upload Photo <span class="text-zinc-600 normal-case">(optional)</span>
+            </label>
+            {{ form.image }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">
+              QR Code ID <span class="text-zinc-600 normal-case">(if available on the item)</span>
+            </label>
+            {{ form.qr_code_id }}
+          </div>
+        </div>
+
+        <p class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span class="flex-1 h-px bg-white/5"></span> When & Where Found <span class="flex-1 h-px bg-white/5"></span>
+        </p>
+
+        <div class="space-y-4 mb-6">
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Date & Time Found</label>
+            {{ form.timestamp_event }}
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">Location</label>
+            <button type="button" onclick="getLocation()"
+              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-zinc-300 text-sm font-medium hover:bg-white/10 transition-all mb-2">
+              <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i> Use My Current Location
+            </button>
+            <p id="loc-status" class="text-xs text-zinc-500 text-center"></p>
+            {{ form.latitude }}
+            {{ form.longitude }}
+          </div>
+        </div>
+
+        <button type="submit"
+          class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm tracking-wide transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] border border-emerald-500/50 flex items-center justify-center gap-2">
+          <i data-lucide="check-circle" class="w-4 h-4"></i> Submit Found Item Report
+        </button>
+      </form>
+    </div>
+
+    <p class="text-center text-sm text-zinc-500 mt-6">
+      Lost something instead?
+      <a href="{% url 'core:report_lost' %}" class="text-blue-400 hover:text-blue-300 font-medium transition-colors">Report a Lost Item →</a>
+    </p>
+  </div>
+</div>
+
+<style>
+  select,textarea,input[type="text"],input[type="datetime-local"],input[type="file"],input[type="number"]{
+    width:100%;padding:10px 14px;background:#09090B;border:1px solid rgba(255,255,255,0.1);
+    border-radius:12px;color:#f4f4f5;font-size:14px;font-family:'Inter',sans-serif;transition:all 0.2s;outline:none;
+  }
+  select:focus,textarea:focus,input:focus{
+    border-color:rgba(16,185,129,0.5);box-shadow:0 0 0 3px rgba(16,185,129,0.1);
+  }
+  textarea{resize:vertical;min-height:100px;}
+  select option{background:#18181B;}
+  input[type="file"]{padding:8px;cursor:pointer;}
+</style>
+
+<script>
+  lucide.createIcons();
+  function getLocation(){
+    const s=document.getElementById('loc-status');
+    s.textContent='Detecting location...';
+    navigator.geolocation.getCurrentPosition(p=>{
+      document.getElementById('id_latitude').value=p.coords.latitude;
+      document.getElementById('id_longitude').value=p.coords.longitude;
+      s.textContent=`✅ ${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`;
+      s.style.color='#4ade80';
+    },()=>{s.textContent='❌ Could not detect. Enter manually.';s.style.color='#f87171';});
+  }
+</script>
+{% endblock %}

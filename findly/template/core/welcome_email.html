@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .header-image { max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; }
+        h1 { color: #333333; }
+        p { color: #555555; font-size: 16px; line-height: 1.5; }
+        .footer { margin-top: 30px; font-size: 12px; color: #aaaaaa; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <img class="header-image" src="https://via.placeholder.com/600x200?text=Welcome+to+Findly" alt="Findly Banner">
+        
+        <h1>Welcome to Findly!</h1>
+        
+        <p>Hi {{ username }},</p>
+        
+        <p>Thank you for registering! We're thrilled to have you on board. Findly is designed to help you smartly track and recover your lost items, bringing you peace of mind.</p>
+        
+        <p>We've attached a quick Getting Started guide to this email to help you set up your first item.</p>
+
+        <div class="footer">
+            &copy; 2026 Findly Team. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

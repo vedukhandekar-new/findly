@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findly | Search Items</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: { zinc: { 50:'#FAFAFA',100:'#F4F4F5',200:'#E4E4E7',300:'#D4D4D8',400:'#A1A1AA',500:'#71717A',600:'#52525B',700:'#3F3F46',800:'#27272A',900:'#18181B',950:'#09090B' } } } }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen">
+
+{% if request.user.role == 'Admin' %}
+    {% include 'navbar_admin.html' %}
+{% elif request.user.role == 'Finder' %}
+    {% include 'navbar_finder.html' %}
+{% else %}
+    {% include 'navbar_owner.html' %}
+{% endif %}
+
+<main class="max-w-5xl mx-auto px-4 sm:px-6 py-10 relative">
+
+    <div class="absolute top-0 left-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold tracking-tight text-zinc-100">Search Items</h1>
+        <p class="text-zinc-500 text-sm mt-1">Browse all active lost & found reports</p>
+    </div>
+
+    <!-- Search Form -->
+    <form method="GET" class="bg-[#121214] border border-white/10 rounded-2xl p-5 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+
+            <!-- Keyword -->
+            <div class="lg:col-span-2">
+                <label class="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5">
+                    <i data-lucide="search" class="w-3 h-3 inline mr-1"></i> Keyword
+                </label>
+                {{ form.query }}
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label class="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5">
+                    <i data-lucide="tag" class="w-3 h-3 inline mr-1"></i> Category
+                </label>
+                {{ form.category }}
+            </div>
+
+            <!-- Type -->
+            <div>
+                <label class="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5">
+                    <i data-lucide="filter" class="w-3 h-3 inline mr-1"></i> Type
+                </label>
+                {{ form.report_type }}
+            </div>
+        </div>
+
+        <!-- Location Row -->
+        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+            <div class="w-full sm:w-36">
+                <label class="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5">
+                    <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i> Radius (km)
+                </label>
+                {{ form.radius_km }}
+            </div>
+            <button type="button" onclick="getLocation()"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-zinc-300 text-sm font-medium hover:bg-white/10 transition-all whitespace-nowrap">
+                <i data-lucide="map-pin" class="w-4 h-4 text-blue-400"></i> Near Me
+            </button>
+            <p id="loc-status" class="text-xs text-zinc-600 self-center"></p>
+            {{ form.latitude }}
+            {{ form.longitude }}
+            <button type="submit"
+                class="ml-auto inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all shadow-[0_0_15px_rgba(37,99,235,0.2)] border border-blue-500/50">
+                <i data-lucide="search" class="w-4 h-4"></i> Search
+            </button>
+        </div>
+    </form>
+
+    <!-- Results -->
+    {% if items %}
+        <div class="flex items-center justify-between mb-4">
+            <p class="text-zinc-500 text-sm">
+                <span class="text-zinc-200 font-semibold">{{ items|length }}</span>
+                result{{ items|length|pluralize }} found
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for item in items %}
+            <a href="{% url 'core:item_detail' item.item_id %}"
+                class="bg-[#121214] border border-white/10 rounded-2xl overflow-hidden hover:border-white/25 hover:-translate-y-0.5 transition-all group block">
+
+                <!-- Image or Emoji -->
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" class="w-full h-40 object-cover"/>
+                {% else %}
+                    <div class="w-full h-40 bg-zinc-900 flex items-center justify-center text-5xl border-b border-white/5">
+                        {% if item.category == 'Electronics' %}📱
+                        {% elif item.category == 'Wallet' %}👛
+                        {% elif item.category == 'Keys' %}🔑
+                        {% elif item.category == 'Bag' %}👜
+                        {% elif item.category == 'Documents' %}📄
+                        {% elif item.category == 'Jewellery' %}💍
+                        {% else %}📦{% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-semibold text-zinc-100 text-sm">{{ item.category }}</span>
+                        {% if item.report_type == 'Lost' %}
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20">Lost</span>
+                        {% else %}
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Found</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-zinc-500 text-xs leading-relaxed mb-2">{{ item.description|truncatechars:70 }}</p>
+                    <div class="flex items-center justify-between">
+                        <p class="text-zinc-700 text-xs">{{ item.created_at|date:"M d, Y" }}</p>
+                        <span class="text-xs text-blue-400 group-hover:text-blue-300 transition-colors font-medium">View →</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+    {% elif request.GET %}
+        <!-- No Results -->
+        <div class="bg-[#121214] border border-white/10 rounded-2xl p-16 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="search-x" class="w-8 h-8 text-zinc-600"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-zinc-300 mb-2">No results found</h3>
+            <p class="text-zinc-500 text-sm">Try different keywords, category, or a wider radius.</p>
+        </div>
+
+    {% else %}
+        <!-- Initial State -->
+        <div class="bg-[#121214] border border-white/10 rounded-2xl p-16 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="search" class="w-8 h-8 text-blue-400"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-zinc-300 mb-2">Search the database</h3>
+            <p class="text-zinc-500 text-sm">Use the filters above to find lost or found items near you.</p>
+        </div>
+    {% endif %}
+
+</main>
+
+<style>
+    select, input[type="text"], input[type="number"] {
+        width: 100%; padding: 10px 14px;
+        background: #09090B; border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px; color: #f4f4f5;
+        font-size: 14px; font-family: 'Inter', sans-serif;
+        transition: all 0.2s; outline: none;
+    }
+    select:focus, input:focus {
+        border-color: rgba(59,130,246,0.5);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+    select option { background: #18181B; }
+    input[type="hidden"] { display: none; }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+    function getLocation() {
+        const s = document.getElementById('loc-status');
+        s.textContent = 'Detecting...';
+        navigator.geolocation.getCurrentPosition(p => {
+            document.getElementById('id_latitude').value  = p.coords.latitude;
+            document.getElementById('id_longitude').value = p.coords.longitude;
+            s.textContent = `📍 ${p.coords.latitude.toFixed(3)}, ${p.coords.longitude.toFixed(3)}`;
+            s.style.color = '#4ade80';
+        }, () => {
+            s.textContent = '❌ Unavailable';
+            s.style.color = '#f87171';
+        });
+    }
+</script>
+</body>
+</html>

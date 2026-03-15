@@ -1,251 +1,146 @@
-{% comment %} <form method="POST" action="">
-    {% csrf_token %}
-    <label for="email">Email:</label>
-    <input type="email" name="email" id="email">
-    
-    <label for="password">Password:</label>
-    <input type="password" name="password" id="password">
-    
-    <button type="submit">Login</button>
-</form> {% endcomment %}
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log in - FindMyLost</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Base Reset */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Montserrat', sans-serif;
+    <title>Findly | Log In</title>
+    
+    <!-- Load Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
         }
-
-        /* Body & Background */
-        body {
-            background-color: #f5f7fa; /* Light greyish-blue background typical of their portal */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: #333333;
-        }
-
-        /* The Login Card Container */
-        .login-wrapper {
-            background-color: #ffffff;
-            width: 100%;
-            max-width: 420px;
-            padding: 40px 35px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            border-top: 5px solid #ef5350; /* FindMyLost signature coral/orange */
-        }
-
-        /* Header Styles */
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .login-header h2 {
-            margin: 0;
-            font-size: 24px;
-            color: #2c3e50;
-            font-weight: 600;
-        }
-
-        .login-header p {
-            margin-top: 8px;
-            font-size: 14px;
-            color: #7f8c8d;
-        }
-
-        /* Form Layout */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #34495e;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Input Fields */
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #dcdde1;
-            border-radius: 4px;
-            font-size: 15px;
-            font-family: 'Montserrat', sans-serif;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            box-sizing: border-box;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #ef5350; /* Brand focus color */
-            box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.15);
-        }
-
-        /* Primary Login Button */
-        .btn-login {
-            width: 100%;
-            background-color: #ef5350; /* Brand coral/orange */
-            color: white;
-            border: none;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: 10px;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        .btn-login:hover {
-            background-color: #d32f2f;
-        }
-
-        /* Options (Remember me & Forgot Password) */
-        .options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
-            font-size: 13px;
-        }
-
-        .options a {
-            color: #ef5350;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .options a:hover {
-            text-decoration: underline;
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            color: #7f8c8d;
-            cursor: pointer;
-        }
-
-        .remember-me input {
-            margin-right: 8px;
-            accent-color: #ef5350;
-            cursor: pointer;
-        }
-
-        /* Divider for Alternative Login */
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 25px 0;
-            color: #bdc3c7;
-            font-size: 13px;
-        }
-
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #ecf0f1;
-        }
-
-        .divider::before { margin-right: 10px; }
-        .divider::after { margin-left: 10px; }
-
-        /* Secondary Facebook Button (Matching FML functionality) */
-        .btn-facebook {
-            width: 100%;
-            background-color: #3b5998;
-            color: white;
-            border: none;
-            padding: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-family: 'Montserrat', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-facebook:hover {
-            background-color: #2d4373;
-        }
-
-        /* Bottom Footer Text */
-        .footer-text {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 13px;
-            color: #7f8c8d;
-        }
-        
-        .footer-text a {
-            color: #ef5350;
-            text-decoration: none;
-            font-weight: 600;
-        }
-    </style>
+    </script>
+    
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
+<body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
-    <div class="login-wrapper">
-        <div class="login-header">
-            <h2>Log in now!</h2>
-            <p>The first Digital Lost Property tool</p>
+    <!-- Ambient Background Glows -->
+    <div class="absolute rounded-full mix-blend-screen pointer-events-none blur-[100px] top-1/4 left-1/4 w-96 h-96 bg-blue-500/10"></div>
+    <div class="absolute rounded-full mix-blend-screen pointer-events-none blur-[100px] bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10"></div>
+
+    <!-- Brand Logo (Clickable to go back to Home) -->
+    <!-- Make sure your home url name is exactly 'home' in urls.py, otherwise change this -->
+    <a href="{% url 'core:home' %}" class="absolute top-8 left-8 flex items-center gap-2 cursor-pointer z-20 group">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.3)] group-hover:scale-105 transition-transform">
+            <i data-lucide="search" class="w-4 h-4 text-white"></i>
         </div>
+        <span class="text-xl font-bold text-white tracking-tight">Findly</span>
+    </a>
 
-        <form method="POST" action="{% url 'core:login' %}">
-        {% csrf_token %}
-            <div class="form-group">
-                <label for="email">Email address</label>
-                <input type="email" id="email" name="email" class="form-control" placeholder="Email" required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
-            </div>
-
-            <button type="submit" class="btn-login">Log in</button>
-
-            <div class="options">
-                <label class="remember-me">
-                    <input type="checkbox" name="remember"> Remember me
-                </label>
-                <a href="#">Lost your password?</a>
-            </div>
-        </form>
-
-        <div class="divider">OR</div>
-
+    <!-- Main Auth Card -->
+    <div class="w-full max-w-md relative z-10">
         
+        <!-- Subtle Glow border behind the card -->
+        <div class="absolute -inset-0.5 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 rounded-2xl blur-md opacity-50"></div>
+        
+        <!-- Glassmorphism Card Surface -->
+        <div class="relative bg-[#121214]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+            
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-white mb-2">Welcome back!</h2>
+                <p class="text-zinc-400 text-sm">
+                    The structured Digital Lost Property tool
+                </p>
+            </div>
 
-        <div class="footer-text">
-            Don't have an account? <a href="#">Sign up by email</a>
+            <!-- Django Login Form -->
+            <form method="POST" action="{% url 'core:login' %}" class="space-y-5">
+                <!-- CRITICAL: Django requires this token to securely submit forms -->
+                {% csrf_token %}
+
+                {% comment %} <!-- THIS WILL SHOW US THE HIDDEN DJANGO ERRORS -->
+                    {% if form.errors %}
+                        <div class="bg-red-500 p-4 rounded-md mb-4 text-white font-bold">
+                            Wait! Django stopped the form because:
+                            <br>
+                         {{ form.errors }}
+                        </div>
+                    {% endif %} {% endcomment %}
+
+                <!-- Optional: Display Django Error Messages if login fails -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-2 rounded-md text-sm text-center">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Email Input -->
+                <div class="space-y-1.5 w-full">
+                    <label class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Email Address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+                            <i data-lucide="mail" class="h-4 w-4"></i>
+                        </div>
+                        <input type="email" name="email" required placeholder="name@company.com" 
+                            class="w-full bg-zinc-900/50 border border-white/10 rounded-md py-2.5 pl-10 pr-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all duration-200 shadow-inner" />
+                    </div>
+                </div>
+
+                <!-- Password Input -->
+                <div class="space-y-1.5 w-full">
+                    <label class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+                            <i data-lucide="lock" class="h-4 w-4"></i>
+                        </div>
+                        <input type="password" name="password" required placeholder="••••••••" 
+                            class="w-full bg-zinc-900/50 border border-white/10 rounded-md py-2.5 pl-10 pr-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all duration-200 shadow-inner" />
+                    </div>
+                </div>
+
+                <!-- Utilities: Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between mt-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="remember" class="w-4 h-4 rounded border-white/10 bg-zinc-900/50 text-blue-500 focus:ring-blue-500/50 focus:ring-offset-zinc-950">
+                        <span class="text-xs text-zinc-400 hover:text-zinc-300 transition-colors">Remember me</span>
+                    </label>
+                    <a href="#" class="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors">Lost your password?</a>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="group relative w-full inline-flex items-center justify-center gap-2 overflow-hidden rounded-md px-4 py-2.5 text-sm font-medium transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950 bg-blue-600 text-white hover:bg-blue-500 focus:ring-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.2)] hover:shadow-[0_0_25px_rgba(37,99,235,0.4)] border border-blue-500/50 mt-4">
+                    <div class="absolute inset-0 top-0 h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                    Log in
+                </button>
+            </form>
+
+            <!-- OR Divider -->
+            <div class="mt-8 text-center text-sm text-zinc-400 relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-white/10"></div>
+                </div>
+                <div class="relative flex justify-center text-xs uppercase font-medium">
+                    <span class="bg-[#121214] px-3 text-zinc-500">OR</span>
+                </div>
+            </div>
+
+            <!-- Sign Up Link -->
+            <div class="mt-6 text-center text-sm text-zinc-400">
+                Don't have an account? 
+                <!-- Links to your signup view based on urls.py -->
+                <a href="{% url 'core:signup' %}" class="text-white font-medium hover:underline decoration-white/30 underline-offset-4 transition-all">Sign up by email</a>
+            </div>
+
         </div>
     </div>
 
+    <!-- Initialize Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

@@ -1,32 +1,89 @@
-{% comment %} <nav class="navbar">
-    <div class="nav-brand"><a href="/">Findly</a></div>
-    <ul class="nav-links">
-        <li><a href="#">My Lost Items</a></li>
-        <li><a href="#">Search Location</a></li>
-        <li><a href="#">Messages</a></li>
-    </ul>
-    <div class="nav-actions">
-        <a href="#" class="btn-primary" style="width: auto;">Report Lost Item</a>
-        <a href="/login/" class="nav-link-subtle">Login</a>
-    </div>
-</nav> {% endcomment %}
+<header class="border-b border-white/5 bg-[#09090B]/80 backdrop-blur-md sticky top-0 z-50">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
-
-<nav class="fml-navbar">
-    <a href="{% url 'owner_dashboard' %}" class="fml-logo">
-        <span class="highlight">Find</span>ly
+    <!-- Logo -->
+    <a href="{% url 'found:owner_dashboard' %}" class="flex items-center gap-2 flex-shrink-0">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+      <span class="text-lg font-bold tracking-tight text-zinc-100">Findly</span>
+      <span class="hidden sm:block px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-zinc-800 text-zinc-400 rounded border border-white/10">Owner</span>
     </a>
 
-    <ul class="fml-nav-links">
-        <li><a href="{% url 'owner_dashboard' %}">My Dashboard</a></li>
-        <li><a href="#">My Lost Items</a></li>
-        <li><a href="#">Search Database</a></li>
-    </ul>
+    <!-- Nav Links (hidden on mobile) -->
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="{% url 'found:owner_dashboard' %}"
+        class="px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-all">
+        My Dashboard
+      </a>
+      <a href="{% url 'core:my_items' %}"
+        class="px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-all">
+        My Lost Items
+      </a>
+      <a href="{% url 'core:search_items' %}"
+        class="px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-all">
+        Search Database
+      </a>
+    </nav>
 
-    <div class="fml-actions">
-        <a href="#" class="fml-btn">Publish Item</a>
-        <a href="{% url 'login' %}" class="fml-btn-outline">Sign Out</a>
-        <a href="{% url 'logout' %}" class="fml-btn-outline">Logout</a>
+    <!-- Actions -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <a href="{% url 'core:report_lost' %}"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all shadow-[0_0_15px_rgba(37,99,235,0.2)] border border-blue-500/50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="hidden sm:inline">Report Lost</span>
+      </a>
+      <a href="{% url 'core:logout' %}"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-zinc-400 text-sm font-medium hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="hidden sm:inline">Logout</span>
+      </a>
+            <!-- Profile Button -->
+      <a href="{% url 'core:profile' %}"
+        class="relative inline-flex items-center justify-center w-9 h-9 rounded-xl border border-white/10 bg-white/5 hover:border-white/20 transition-all overflow-hidden">
+        {% if request.user.profile_image %}
+            <img src="{{ request.user.profile_image.url }}" class="w-full h-full object-cover"/>
+        {% else %}
+            <span class="text-xs font-bold text-zinc-300">
+              {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+            </span>
+        {% endif %}
+      </a>
+      <!-- Notification Bell -->
+      <a href="{% url 'core:notifications' %}"
+        class="relative inline-flex items-center justify-center w-9 h-9 rounded-xl border border-white/10 bg-white/5 text-zinc-400 hover:text-zinc-100 hover:border-white/20 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <!-- Red dot for unread count -->
+        <span id="notif-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center"></span>
+      </a>
 
+      <!-- Mobile Menu Button -->
+      <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg border border-white/10 bg-white/5 text-zinc-400 hover:text-zinc-100 transition-all">
+        <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
     </div>
-</nav>
+
+  </div>
+
+  <!-- Mobile Dropdown Menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-[#09090B]/95 backdrop-blur-md">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col gap-1">
+      <a href="{% url 'found:owner_dashboard' %}" class="px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-all">
+        My Dashboard
+      </a>
+      <a href="{% url 'core:my_items' %}" class="px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-all">
+        My Lost Items
+      </a>
+      <a href="{% url 'core:search_items' %}" class="px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-all">
+        Search Database
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    menu.classList.toggle('hidden');
+  }
+</script>

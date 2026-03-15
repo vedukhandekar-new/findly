@@ -8,7 +8,7 @@
         {% if user.is_authenticated %}
 
             {% if user.role == "Admin" %}
-                <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'found:admin_dashboard' %}">Dashboard</a></li>
                 <li><a href="#">Manage Users</a></li>
                 <li><a href="#">Reports</a></li>
                 <li><a href="#">Analytics</a></li>

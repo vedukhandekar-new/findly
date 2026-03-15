@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findly | Match Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: { zinc: { 50:'#FAFAFA',100:'#F4F4F5',200:'#E4E4E7',300:'#D4D4D8',400:'#A1A1AA',500:'#71717A',600:'#52525B',700:'#3F3F46',800:'#27272A',900:'#18181B',950:'#09090B' } } } }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen">
+
+{% if request.user.role == 'Admin' %}
+    {% include 'navbar_admin.html' %}
+{% elif request.user.role == 'Finder' %}
+    {% include 'navbar_finder.html' %}
+{% else %}
+    {% include 'navbar_owner.html' %}
+{% endif %}
+
+<main class="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Back -->
+    <a href="{% if request.user.role == 'Owner' %}{% url 'found:owner_dashboard' %}{% else %}{% url 'found:finder_dashboard' %}{% endif %}"
+        class="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-6">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
+    </a>
+
+    <!-- Match Summary Header -->
+    <div class="bg-[#121214] border border-white/10 rounded-2xl overflow-hidden mb-4">
+
+        <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between flex-wrap gap-3">
+            <div>
+                <h1 class="text-lg font-extrabold text-zinc-100">Match Chat</h1>
+                <p class="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5">
+                    <i data-lucide="lock" class="w-3 h-3"></i> Identity hidden until recovery confirmed
+                </p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i> {{ match.ai_confidence }}% AI Confidence
+            </span>
+        </div>
+
+        <!-- Side by side item comparison -->
+        <div class="grid grid-cols-2 divide-x divide-white/5">
+            <div class="p-4">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20 mb-2">
+                    <i data-lucide="alert-circle" class="w-3 h-3"></i> Lost
+                </span>
+                <p class="text-zinc-100 font-semibold text-sm">{{ match.lost_item.category }}</p>
+                <p class="text-zinc-500 text-xs mt-1 leading-relaxed">{{ match.lost_item.description|truncatechars:60 }}</p>
+                <p class="text-zinc-700 text-xs mt-2 flex items-center gap-1">
+                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                    {{ match.lost_item.timestamp_event|date:"M d, Y" }}
+                </p>
+            </div>
+            <div class="p-4">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mb-2">
+                    <i data-lucide="check-circle" class="w-3 h-3"></i> Found
+                </span>
+                <p class="text-zinc-100 font-semibold text-sm">{{ match.found_item.category }}</p>
+                <p class="text-zinc-500 text-xs mt-1 leading-relaxed">{{ match.found_item.description|truncatechars:60 }}</p>
+                <p class="text-zinc-700 text-xs mt-2 flex items-center gap-1">
+                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                    {{ match.found_item.timestamp_event|date:"M d, Y" }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Window -->
+    <div class="bg-[#121214] border border-white/10 rounded-2xl overflow-hidden mb-3">
+
+        <!-- Chat Header -->
+        <div class="px-5 py-3 border-b border-white/5 flex items-center gap-2 bg-white/[0.02]">
+            <i data-lucide="message-circle" class="w-4 h-4 text-zinc-500"></i>
+            <span class="text-sm font-medium text-zinc-300">Messages</span>
+            {% if messages %}
+                <span class="ml-auto px-2 py-0.5 rounded-full text-xs bg-zinc-800 text-zinc-400 border border-white/10">
+                    {{ messages|length }}
+                </span>
+            {% endif %}
+        </div>
+
+        <!-- Messages -->
+        <div id="chat-box" class="p-4 min-h-[350px] max-h-[420px] overflow-y-auto flex flex-col gap-3">
+            {% if messages %}
+                {% for msg in messages %}
+                <div class="flex {% if msg.sender == request.user %}justify-end{% else %}justify-start{% endif %}">
+
+                    {% if msg.sender != request.user %}
+                    <!-- Avatar -->
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-zinc-600 to-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300 mr-2 flex-shrink-0 mt-1">
+                        ?
+                    </div>
+                    {% endif %}
+
+                    <div class="max-w-[70%] flex flex-col {% if msg.sender == request.user %}items-end{% else %}items-start{% endif %}">
+                        <div class="px-4 py-2.5 rounded-2xl text-sm leading-relaxed
+                            {% if msg.sender == request.user %}
+                                bg-blue-600 text-white rounded-br-sm shadow-[0_0_15px_rgba(37,99,235,0.2)]
+                            {% else %}
+                                bg-zinc-800 border border-white/10 text-zinc-200 rounded-bl-sm
+                            {% endif %}">
+                            {{ msg.content }}
+                        </div>
+                        <span class="text-[10px] text-zinc-600 mt-1 px-1">{{ msg.sent_at|time:"H:i" }}</span>
+                    </div>
+
+                    {% if msg.sender == request.user %}
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white ml-2 flex-shrink-0 mt-1">
+                        {{ request.user.first_name|first|upper }}
+                    </div>
+                    {% endif %}
+
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="flex items-center justify-center h-full min-h-[300px]">
+                    <div class="text-center">
+                        <div class="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="message-circle" class="w-6 h-6 text-zinc-600"></i>
+                        </div>
+                        <p class="text-zinc-500 text-sm font-medium">No messages yet</p>
+                        <p class="text-zinc-600 text-xs mt-1">Say hello to get started! 👋</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Message Input -->
+    <form method="POST" class="flex gap-2 items-end">
+        {% csrf_token %}
+        <div class="flex-1">
+            <label class="block text-xs font-medium text-zinc-600 mb-1.5 ml-1">Your message</label>
+            {{ form.content }}
+        </div>
+        <button type="submit"
+            class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all border border-blue-500/50 shadow-[0_0_15px_rgba(37,99,235,0.2)] flex items-center gap-2 whitespace-nowrap mb-0">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Send</span>
+        </button>
+    </form>
+
+</main>
+
+<style>
+    textarea {
+        width: 100%; padding: 10px 14px;
+        background: #09090B; border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px; color: #f4f4f5;
+        font-size: 14px; font-family: 'Inter', sans-serif;
+        transition: all 0.2s; outline: none;
+        resize: none; min-height: 44px; max-height: 120px;
+    }
+    textarea:focus {
+        border-color: rgba(59,130,246,0.5);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        // Auto scroll to bottom
+        const box = document.getElementById('chat-box');
+        if (box) box.scrollTop = box.scrollHeight;
+        // Auto resize textarea
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+            // Send on Enter, new line on Shift+Enter
+            textarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.closest('form').submit();
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

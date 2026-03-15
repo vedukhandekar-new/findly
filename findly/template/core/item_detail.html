@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block navbar %}{% include 'navbar.html' %}{% endblock %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},colors:{zinc:{50:'#FAFAFA',100:'#F4F4F5',200:'#E4E4E7',300:'#D4D4D8',400:'#A1A1AA',500:'#71717A',600:'#52525B',700:'#3F3F46',800:'#27272A',900:'#18181B',950:'#09090B'}}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<div class="min-h-screen bg-[#09090B] text-zinc-50 font-sans">
+<div class="max-w-2xl mx-auto px-4 pt-16 pb-16">
+
+  <!-- Back Button -->
+  <a href="{% url 'core:my_items' %}" class="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-6">
+    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to My Items
+  </a>
+
+  <!-- Status Badges -->
+  <div class="mb-4 flex flex-wrap gap-2">
+    {% if item.report_type == 'Lost' %}
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-amber-500/10 text-amber-500 border-amber-500/20">
+        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Lost
+      </span>
+    {% else %}
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Found
+      </span>
+    {% endif %}
+
+    {% if item.status == 'Recovered' %}
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-blue-500/10 text-blue-400 border-blue-500/20">
+        <i data-lucide="package-check" class="w-3.5 h-3.5"></i> Recovered
+      </span>
+    {% elif item.status == 'Matching' %}
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-400 border-purple-500/20">
+        <i data-lucide="zap" class="w-3.5 h-3.5"></i> Matching in Progress
+      </span>
+    {% else %}
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border bg-zinc-500/10 text-zinc-400 border-zinc-500/20">
+        <i data-lucide="clock" class="w-3.5 h-3.5"></i> Active
+      </span>
+    {% endif %}
+  </div>
+
+  <!-- Title -->
+  <h1 class="text-3xl font-extrabold tracking-tight text-zinc-100 mb-1">{{ item.category }}</h1>
+  <p class="text-zinc-500 text-sm mb-6">Reported on {{ item.created_at|date:"M d, Y" }}</p>
+
+  <!-- Image -->
+  {% if item.image %}
+    <img src="{{ item.image.url }}" alt="Item photo"
+      class="w-full rounded-2xl border border-white/10 object-cover max-h-72 mb-6"/>
+  {% else %}
+    <div class="w-full h-44 rounded-2xl border border-white/10 bg-zinc-900 flex items-center justify-center mb-6">
+      <div class="text-center">
+        <i data-lucide="image" class="w-10 h-10 text-zinc-700 mx-auto mb-2"></i>
+        <p class="text-zinc-600 text-xs">No photo uploaded</p>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Details Card -->
+  <div class="bg-[#121214] border border-white/10 rounded-2xl p-6 mb-4">
+    <p class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+      <span class="flex-1 h-px bg-white/5"></span> Item Details <span class="flex-1 h-px bg-white/5"></span>
+    </p>
+
+    <p class="text-zinc-300 text-sm leading-relaxed mb-6">{{ item.description }}</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div class="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+        <p class="text-xs text-zinc-600 uppercase tracking-wider mb-1">Status</p>
+        <p class="text-zinc-200 font-semibold text-sm">{{ item.status }}</p>
+      </div>
+      <div class="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+        <p class="text-xs text-zinc-600 uppercase tracking-wider mb-1">Report Type</p>
+        <p class="text-zinc-200 font-semibold text-sm">{{ item.report_type }}</p>
+      </div>
+      <div class="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+        <p class="text-xs text-zinc-600 uppercase tracking-wider mb-1">Date of Event</p>
+        <p class="text-zinc-200 text-sm">{{ item.timestamp_event|date:"M d, Y — H:i" }}</p>
+      </div>
+      <div class="bg-zinc-900/50 rounded-xl p-3 border border-white/5">
+        <p class="text-xs text-zinc-600 uppercase tracking-wider mb-1">Reported By</p>
+        <p class="text-zinc-200 text-sm">{{ item.reporter.first_name }} {{ item.reporter.last_name }}</p>
+      </div>
+      <div class="bg-zinc-900/50 rounded-xl p-3 border border-white/5 sm:col-span-2">
+        <p class="text-xs text-zinc-600 uppercase tracking-wider mb-1">Location (GPS)</p>
+        <p class="text-zinc-200 text-sm font-mono">{{ item.latitude }}, {{ item.longitude }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Button -->
+  {% if request.user == item.reporter %}
+    {% if item.status != 'Recovered' %}
+      <a href="{% url 'core:confirm_recovery' item.item_id %}"
+        class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm tracking-wide transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] border border-emerald-500/50 flex items-center justify-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4"></i> Mark as Recovered
+      </a>
+    {% else %}
+      <div class="w-full py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold text-center">
+        🎉 This item has been successfully recovered!
+      </div>
+    {% endif %}
+  {% endif %}
+
+</div>
+</div>
+<script>lucide.createIcons();</script>
+{% endblock %}
