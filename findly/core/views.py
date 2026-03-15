@@ -1,14 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib import messages
-from django.core.mail import send_mail, EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from math import radians, cos, sin, asin, sqrt
-from email.mime.image import MIMEImage
 import os
 import random
 
@@ -21,230 +20,300 @@ from .models import User, Item, Match, Message, Notification, Review
 from .utils import run_matching_algorithm, send_notification
 
 
+# ─────────────────────────────────────────
+# WELCOME EMAIL — sent on signup, no OTP
+# ─────────────────────────────────────────
+
+def send_welcome_email(user):
+    html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Welcome to Findly!</title>
+</head>
+<body style="margin:0;padding:0;background-color:#09090B;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#09090B;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background-color:#121214;border-radius:20px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
+
+  <tr>
+    <td style="background:linear-gradient(135deg,#1d4ed8,#4f46e5);padding:48px 40px;text-align:center;">
+      <table cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 20px auto;">
+        <tr>
+          <td width="64" height="64" style="background:rgba(255,255,255,0.15);border-radius:18px;text-align:center;vertical-align:middle;">
+            <span style="font-size:30px;line-height:64px;">&#128269;</span>
+          </td>
+        </tr>
+      </table>
+      <h1 style="margin:0 0 8px 0;color:#ffffff;font-size:32px;font-weight:800;letter-spacing:-0.5px;">Findly</h1>
+      <p style="margin:0;color:rgba(255,255,255,0.65);font-size:14px;">Lost &amp; Found Platform</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:0;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.08));border-bottom:1px solid rgba(16,185,129,0.2);padding:20px 40px;text-align:center;">
+            <p style="margin:0;color:#34d399;font-size:15px;font-weight:600;">&#127881; &nbsp;Thank you for joining Findly!</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:40px 40px 32px 40px;">
+      <h2 style="margin:0 0 12px 0;color:#f4f4f5;font-size:24px;font-weight:800;">Welcome aboard, {user.first_name or 'there'}! &#128075;</h2>
+      <p style="margin:0 0 28px 0;color:#71717a;font-size:14px;line-height:1.8;">
+        Thank you for registering with <strong style="color:#a1a1aa;">Findly</strong>. We are thrilled to have you as part of our community. Findly is built to make recovering lost items easier, faster, and more reliable &#8212; and you are now part of that mission.
+      </p>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:0 0 28px 0;">
+
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+        <tr>
+          <td style="background:rgba(37,99,235,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:14px 20px;">
+            <p style="margin:0 0 4px 0;color:#93c5fd;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;">Your Account</p>
+            <p style="margin:0;color:#f4f4f5;font-size:15px;font-weight:600;">{user.email} &nbsp;&#183;&nbsp; <span style="color:#60a5fa;">{user.role}</span></p>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin:0 0 16px 0;color:#a1a1aa;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Get started in 3 steps</p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+        <tr>
+          <td style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <table cellpadding="0" cellspacing="0" width="100%"><tr>
+              <td width="40" style="vertical-align:top;padding-top:2px;">
+                <span style="display:inline-block;width:28px;height:28px;background:linear-gradient(135deg,#2563eb,#4f46e5);border-radius:8px;color:#fff;font-size:13px;font-weight:800;text-align:center;line-height:28px;">1</span>
+              </td>
+              <td style="padding-left:12px;">
+                <p style="margin:0 0 3px 0;color:#e4e4e7;font-size:14px;font-weight:600;">Log in and verify your email</p>
+                <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">You will receive an OTP on your first login to verify your email</p>
+              </td>
+            </tr></table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <table cellpadding="0" cellspacing="0" width="100%"><tr>
+              <td width="40" style="vertical-align:top;padding-top:2px;">
+                <span style="display:inline-block;width:28px;height:28px;background:linear-gradient(135deg,#2563eb,#4f46e5);border-radius:8px;color:#fff;font-size:13px;font-weight:800;text-align:center;line-height:28px;">2</span>
+              </td>
+              <td style="padding-left:12px;">
+                <p style="margin:0 0 3px 0;color:#e4e4e7;font-size:14px;font-weight:600;">Report a lost or found item</p>
+                <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">Describe the item with details and location for best results</p>
+              </td>
+            </tr></table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:12px 0;">
+            <table cellpadding="0" cellspacing="0" width="100%"><tr>
+              <td width="40" style="vertical-align:top;padding-top:2px;">
+                <span style="display:inline-block;width:28px;height:28px;background:linear-gradient(135deg,#2563eb,#4f46e5);border-radius:8px;color:#fff;font-size:13px;font-weight:800;text-align:center;line-height:28px;">3</span>
+              </td>
+              <td style="padding-left:12px;">
+                <p style="margin:0 0 3px 0;color:#e4e4e7;font-size:14px;font-weight:600;">Let AI do the matching</p>
+                <p style="margin:0;color:#71717a;font-size:12px;line-height:1.6;">Our system notifies you when a potential match is found</p>
+              </td>
+            </tr></table>
+          </td>
+        </tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="31%" style="text-align:center;padding:18px 10px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+            <p style="margin:0 0 6px 0;color:#f4f4f5;font-size:22px;font-weight:800;">AI</p>
+            <p style="margin:0;color:#71717a;font-size:11px;line-height:1.4;">Powered<br>Matching</p>
+          </td>
+          <td width="3%"></td>
+          <td width="31%" style="text-align:center;padding:18px 10px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+            <p style="margin:0 0 6px 0;color:#f4f4f5;font-size:22px;font-weight:800;">&#128272;</p>
+            <p style="margin:0;color:#71717a;font-size:11px;line-height:1.4;">Secure<br>Chat</p>
+          </td>
+          <td width="3%"></td>
+          <td width="31%" style="text-align:center;padding:18px 10px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+            <p style="margin:0 0 6px 0;color:#f4f4f5;font-size:22px;font-weight:800;">&#11088;</p>
+            <p style="margin:0;color:#71717a;font-size:11px;line-height:1.4;">Verified<br>Reviews</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="background:#0a0a0c;border-top:1px solid rgba(255,255,255,0.06);padding:24px 40px;text-align:center;">
+      <p style="margin:0 0 4px 0;color:#3f3f46;font-size:12px;">This email was sent to <span style="color:#52525b;">{user.email}</span></p>
+      <p style="margin:0;color:#3f3f46;font-size:12px;">&#169; 2026 Findly. All rights reserved.</p>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+    text_body = f"Welcome to Findly, {user.first_name or 'there'}!\n\nThank you for registering. Log in to verify your email and get started.\n\nRole: {user.role}\nEmail: {user.email}\n\n© 2026 Findly"
+    try:
+        msg = EmailMultiAlternatives(
+            subject=f"Welcome to Findly, {user.first_name or 'there'}!",
+            body=text_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email]
+        )
+        msg.attach_alternative(html_body, "text/html")
+        msg.send()
+        print(f"Welcome email sent to {user.email}")
+    except Exception as e:
+        print(f"Welcome email failed: {e}")
+
+
+# ─────────────────────────────────────────
+# OTP EMAIL — sent on first login
+# ─────────────────────────────────────────
+
+def send_otp_email(user, otp):
+    html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Verify Your Email - Findly</title>
+</head>
+<body style="margin:0;padding:0;background-color:#09090B;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#09090B;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background-color:#121214;border-radius:20px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
+
+  <tr>
+    <td style="background:linear-gradient(135deg,#1d4ed8,#4f46e5);padding:36px 40px;text-align:center;">
+      <table cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 16px auto;">
+        <tr>
+          <td width="52" height="52" style="background:rgba(255,255,255,0.15);border-radius:14px;text-align:center;vertical-align:middle;">
+            <span style="font-size:24px;line-height:52px;">&#128269;</span>
+          </td>
+        </tr>
+      </table>
+      <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:-0.5px;">Findly</h1>
+      <p style="margin:6px 0 0;color:rgba(255,255,255,0.65);font-size:13px;">Lost &amp; Found Platform</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:36px 40px;">
+      <h2 style="margin:0 0 8px 0;color:#f4f4f5;font-size:20px;font-weight:700;">Verify your email, {user.first_name or 'there'} &#128274;</h2>
+      <p style="margin:0 0 24px 0;color:#71717a;font-size:14px;line-height:1.7;">
+        Use the OTP below to verify your Findly account. This code is valid for <strong style="color:#a1a1aa;">10 minutes</strong> only.
+      </p>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:0 0 24px 0;">
+
+      <p style="margin:0 0 12px 0;color:#a1a1aa;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Your Verification Code</p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+        <tr>
+          <td style="background:linear-gradient(135deg,rgba(37,99,235,0.15),rgba(79,70,229,0.15));border:1px solid rgba(59,130,246,0.35);border-radius:14px;padding:28px 20px;text-align:center;">
+            <p style="margin:0 0 8px 0;color:#93c5fd;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">One-Time Password</p>
+            <p style="margin:0;color:#ffffff;font-size:44px;font-weight:800;letter-spacing:14px;font-family:'Courier New',Courier,monospace;">{otp}</p>
+          </td>
+        </tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+        <tr>
+          <td style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 16px;">
+            <p style="margin:0;color:#fbbf24;font-size:13px;">&#9200; This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
+          </td>
+        </tr>
+      </table>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:0 0 24px 0;">
+
+      <p style="margin:0 0 16px 0;color:#a1a1aa;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">What you can do with Findly</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="padding:8px 0;">
+          <table cellpadding="0" cellspacing="0"><tr>
+            <td width="36" height="36" style="background:rgba(37,99,235,0.12);border-radius:8px;text-align:center;vertical-align:middle;font-size:16px;">&#128230;</td>
+            <td style="padding-left:12px;color:#a1a1aa;font-size:13px;line-height:1.6;">Report lost or found items instantly</td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:8px 0;">
+          <table cellpadding="0" cellspacing="0"><tr>
+            <td width="36" height="36" style="background:rgba(16,185,129,0.12);border-radius:8px;text-align:center;vertical-align:middle;font-size:16px;">&#129302;</td>
+            <td style="padding-left:12px;color:#a1a1aa;font-size:13px;line-height:1.6;">AI-powered matching to reunite items with owners</td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:8px 0;">
+          <table cellpadding="0" cellspacing="0"><tr>
+            <td width="36" height="36" style="background:rgba(139,92,246,0.12);border-radius:8px;text-align:center;vertical-align:middle;font-size:16px;">&#128172;</td>
+            <td style="padding-left:12px;color:#a1a1aa;font-size:13px;line-height:1.6;">Chat securely with finders and owners</td>
+          </tr></table>
+        </td></tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="background:#0a0a0c;border-top:1px solid rgba(255,255,255,0.06);padding:24px 40px;text-align:center;">
+      <p style="margin:0 0 4px 0;color:#3f3f46;font-size:12px;">This email was sent to <span style="color:#52525b;">{user.email}</span></p>
+      <p style="margin:0;color:#3f3f46;font-size:12px;">&#169; 2026 Findly. All rights reserved.</p>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+    text_body = f"Hi {user.first_name or 'there'},\n\nYour Findly OTP is: {otp}\n\nExpires in 10 minutes. Do not share it.\n\n© 2026 Findly"
+    try:
+        msg = EmailMultiAlternatives(
+            subject="Verify your Findly email",
+            body=text_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email]
+        )
+        msg.attach_alternative(html_body, "text/html")
+        msg.send()
+        print(f"OTP email sent to {user.email}: {otp}")
+    except Exception as e:
+        print(f"OTP email failed: {e}")
+
+
+# ─────────────────────────────────────────
+# SIGNUP — save user, send welcome email,
+#          redirect to LOGIN (not verify)
+# ─────────────────────────────────────────
+
 def userSignupView(request):
     if request.method == "POST":
         form = UserSignupForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False
-            otp = str(random.randint(100000, 999999))
-            user.otp_code = otp
-            user.otp_created_at = timezone.now()
+            user.is_active = False  # inactive until OTP verified on login
             user.save()
-            try:
-                html_body = f"""
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Verify Your Email - Findly</title>
-                </head>
-                <body style="margin:0;padding:0;background-color:#09090B;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-
-                    <!-- Wrapper -->
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#09090B;padding:40px 20px;">
-                        <tr>
-                            <td align="center">
-                                <table width="100%" max-width="560" cellpadding="0" cellspacing="0"
-                                    style="max-width:560px;background-color:#121214;border-radius:20px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
-
-                                    <!-- Header -->
-                                    <tr>
-                                        <td style="background:linear-gradient(135deg,#1d4ed8,#4f46e5);padding:36px 40px;text-align:center;">
-                                            <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
-                                                <tr>
-                                                    <td style="background:rgba(255,255,255,0.15);border-radius:14px;width:48px;height:48px;text-align:center;vertical-align:middle;">
-                                                        <span style="font-size:22px;">🔍</span>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:800;letter-spacing:-0.5px;">Findly</h1>
-                                            <p style="margin:6px 0 0;color:rgba(255,255,255,0.7);font-size:13px;font-weight:400;">Lost & Found Platform</p>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Body -->
-                                    <tr>
-                                        <td style="padding:36px 40px;">
-
-                                            <!-- Greeting -->
-                                            <h2 style="margin:0 0 8px;color:#f4f4f5;font-size:20px;font-weight:700;">
-                                                Welcome, {user.first_name or 'there'} 👋
-                                            </h2>
-                                            <p style="margin:0 0 24px;color:#71717a;font-size:14px;line-height:1.6;">
-                                                Thank you for joining <strong style="color:#a1a1aa;">Findly</strong> — your trusted platform for reporting and recovering lost items. We're excited to have you on board!
-                                            </p>
-
-                                            <!-- Divider -->
-                                            <hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:0 0 24px;">
-
-                                            <!-- OTP Section -->
-                                            <p style="margin:0 0 12px;color:#a1a1aa;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;">
-                                                Your Verification Code
-                                            </p>
-
-                                            <!-- OTP Box -->
-                                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-                                                <tr>
-                                                    <td style="background:linear-gradient(135deg,rgba(37,99,235,0.15),rgba(79,70,229,0.15));border:1px solid rgba(59,130,246,0.3);border-radius:14px;padding:24px;text-align:center;">
-                                                        <p style="margin:0 0 8px;color:#93c5fd;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">One-Time Password</p>
-                                                        <p style="margin:0;color:#ffffff;font-size:40px;font-weight:800;letter-spacing:12px;font-family:'Courier New',monospace;">{otp}</p>
-                                                    </td>
-                                                </tr>
-                                            </table>
-
-                                            <!-- Expiry Notice -->
-                                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-                                                <tr>
-                                                    <td style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:12px 16px;">
-                                                        <p style="margin:0;color:#fbbf24;font-size:13px;">
-                                                            ⏱ This code expires in <strong>10 minutes</strong>. Do not share it with anyone.
-                                                        </p>
-                                                    </td>
-                                                </tr>
-                                            </table>
-
-                                            <!-- Divider -->
-                                            <hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:0 0 24px;">
-
-                                            <!-- What's next -->
-                                            <p style="margin:0 0 12px;color:#a1a1aa;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;">What you can do with Findly</p>
-                                            <table width="100%" cellpadding="0" cellspacing="0">
-                                                <tr>
-                                                    <td style="padding:8px 0;">
-                                                        <table cellpadding="0" cellspacing="0">
-                                                            <tr>
-                                                                <td style="width:32px;height:32px;background:rgba(37,99,235,0.1);border-radius:8px;text-align:center;vertical-align:middle;font-size:14px;">📦</td>
-                                                                <td style="padding-left:12px;color:#a1a1aa;font-size:13px;line-height:1.5;">Report lost or found items instantly</td>
-                                                            </tr>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding:8px 0;">
-                                                        <table cellpadding="0" cellspacing="0">
-                                                            <tr>
-                                                                <td style="width:32px;height:32px;background:rgba(16,185,129,0.1);border-radius:8px;text-align:center;vertical-align:middle;font-size:14px;">🤖</td>
-                                                                <td style="padding-left:12px;color:#a1a1aa;font-size:13px;line-height:1.5;">AI-powered matching to reunite items with owners</td>
-                                                            </tr>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding:8px 0;">
-                                                        <table cellpadding="0" cellspacing="0">
-                                                            <tr>
-                                                                <td style="width:32px;height:32px;background:rgba(139,92,246,0.1);border-radius:8px;text-align:center;vertical-align:middle;font-size:14px;">💬</td>
-                                                                <td style="padding-left:12px;color:#a1a1aa;font-size:13px;line-height:1.5;">Chat securely with finders and owners</td>
-                                                            </tr>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Footer -->
-                                    <tr>
-                                        <td style="background:#0a0a0c;border-top:1px solid rgba(255,255,255,0.06);padding:24px 40px;text-align:center;">
-                                            <p style="margin:0 0 6px;color:#3f3f46;font-size:12px;">
-                                                This email was sent to <span style="color:#52525b;">{user.email}</span>
-                                            </p>
-                                            <p style="margin:0;color:#3f3f46;font-size:12px;">
-                                                © 2026 Findly. All rights reserved.
-                                            </p>
-                                        </td>
-                                    </tr>
-
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </body>
-                </html>
-                """
-
-                text_body = f"Welcome to Findly, {user.first_name or 'there'}!\n\nYour OTP is: {otp}\n\nThis code expires in 10 minutes. Do not share it with anyone.\n\n© 2026 Findly"
-
-                msg = EmailMultiAlternatives(
-                    subject="Verify your Findly account 🔐",
-                    body=text_body,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[user.email],
-                )
-                msg.attach_alternative(html_body, "text/html")
-                msg.send()
-                print(f"✅ OTP sent to {user.email}: {otp}")
-
-            except Exception as e:
-                print(f"❌ OTP email failed: {e}")
-
-
-def verifyOtpView(request):
-    email = request.session.get('verify_email')
-    if not email:
-        return redirect('core:signup')
-    if request.method == "POST":
-        otp_entered = request.POST.get('otp', '').strip()
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            messages.error(request, "User not found.")
-            return redirect('core:signup')
-        if user.otp_created_at:
-            expiry = user.otp_created_at + timezone.timedelta(minutes=10)
-            if timezone.now() > expiry:
-                messages.error(request, "OTP expired. Please sign up again.")
-                user.delete()
-                return redirect('core:signup')
-            if otp_entered == user.otp_code:
-                user.is_active = True
-                user.otp_code = None
-                user.otp_created_at = None
-                user.save()
-                if 'verify_email' in request.session:
-                    del request.session['verify_email']
-
-                # Auto login after verification
-                login(request, user)
-                messages.success(request, "✅ Email verified! Welcome to Findly.")
-
-                if user.role == "Admin":
-                    return redirect("found:admin_dashboard")
-                elif user.role == "Owner":
-                    return redirect("found:owner_dashboard")
-                elif user.role == "Finder":
-                    return redirect("found:finder_dashboard")
+            send_welcome_email(user)
+            messages.success(request, f"Account created! Please log in to verify your email.")
+            return redirect('core:login')
         else:
-            messages.error(request, "Incorrect OTP. Please try again.")
-            return render(request, 'core/verify_otp.html', {'email': email})
-    return render(request, 'core/verify_otp.html', {'email': email})
+            print("SIGNUP ERRORS:", form.errors)
+            return render(request, 'core/signup.html', {'form': form})
+    else:
+        form = UserSignupForm()
+        return render(request, 'core/signup.html', {'form': form})
 
 
-def resendOtpView(request):
-    email = request.session.get('verify_email')
-    if not email:
-        return redirect('core:signup')
-    try:
-        user = User.objects.get(email=email)
-        otp = str(random.randint(100000, 999999))
-        user.otp_code = otp
-        user.otp_created_at = timezone.now()
-        user.save()
-        send_mail(
-            subject="Findly — New OTP",
-            message=f"Your new Findly OTP is: {otp}\n\nExpires in 10 minutes.",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=False,
-        )
-        print(f"New OTP sent to {email}: {otp}")
-        messages.success(request, "New OTP sent!")
-    except Exception as e:
-        messages.error(request, f"Failed to resend OTP: {e}")
-    return redirect('core:verify_otp')
-
+# ─────────────────────────────────────────
+# LOGIN — if inactive, send OTP and
+#         redirect to verify page
+# ─────────────────────────────────────────
 
 def userLoginView(request):
     if request.method == "POST":
@@ -259,24 +328,16 @@ def userLoginView(request):
             if not user.check_password(password):
                 return render(request, 'core/login.html', {'form': form, 'error': "Invalid email or password"})
             if not user.is_active:
+                # Send OTP for email verification
                 otp = str(random.randint(100000, 999999))
                 user.otp_code = otp
                 user.otp_created_at = timezone.now()
                 user.save()
-                try:
-                    send_mail(
-                        subject="Findly — Verify Your Email",
-                        message=f"Your Findly OTP is: {otp}\n\nExpires in 10 minutes.",
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[user.email],
-                        fail_silently=False,
-                    )
-                    print(f"OTP resent to {user.email}: {otp}")
-                except Exception as e:
-                    print(f"OTP email failed: {e}")
+                send_otp_email(user, otp)
                 request.session['verify_email'] = user.email
-                messages.error(request, "Your email is not verified. We sent a new OTP to your inbox.")
+                messages.success(request, f"OTP sent to {user.email}. Please verify your email.")
                 return redirect('core:verify_otp')
+            # Already verified — log in directly
             login(request, user)
             print(f"Logged in: {user.email} | Role: {user.role}")
             if user.role == "Admin":
@@ -290,16 +351,90 @@ def userLoginView(request):
     return render(request, 'core/login.html', {'form': form})
 
 
+# ─────────────────────────────────────────
+# VERIFY OTP
+# ─────────────────────────────────────────
+
+def verifyOtpView(request):
+    email = request.session.get('verify_email')
+    if not email:
+        return redirect('core:login')
+    if request.method == "POST":
+        otp_entered = request.POST.get('otp', '').strip()
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            messages.error(request, "User not found.")
+            return redirect('core:login')
+        if user.otp_created_at:
+            expiry = user.otp_created_at + timezone.timedelta(minutes=10)
+            if timezone.now() > expiry:
+                messages.error(request, "OTP expired. Please log in again.")
+                return redirect('core:login')
+        if otp_entered == user.otp_code:
+            user.is_active = True
+            user.otp_code = None
+            user.otp_created_at = None
+            user.save()
+            if 'verify_email' in request.session:
+                del request.session['verify_email']
+            login(request, user)
+            messages.success(request, "Email verified! Welcome to Findly.")
+            if user.role == "Admin":
+                return redirect("found:admin_dashboard")
+            elif user.role == "Owner":
+                return redirect("found:owner_dashboard")
+            elif user.role == "Finder":
+                return redirect("found:finder_dashboard")
+        else:
+            messages.error(request, "Incorrect OTP. Please try again.")
+            return render(request, 'core/verify_otp.html', {'email': email})
+    return render(request, 'core/verify_otp.html', {'email': email})
+
+
+# ─────────────────────────────────────────
+# RESEND OTP
+# ─────────────────────────────────────────
+
+def resendOtpView(request):
+    email = request.session.get('verify_email')
+    if not email:
+        return redirect('core:login')
+    try:
+        user = User.objects.get(email=email)
+        otp = str(random.randint(100000, 999999))
+        user.otp_code = otp
+        user.otp_created_at = timezone.now()
+        user.save()
+        send_otp_email(user, otp)
+        messages.success(request, "New OTP sent to your email!")
+    except Exception as e:
+        messages.error(request, f"Failed to resend OTP: {e}")
+    return redirect('core:verify_otp')
+
+
+# ─────────────────────────────────────────
+# LOGOUT
+# ─────────────────────────────────────────
+
 def user_logout(request):
     logout(request)
     return redirect('core:login')
 
+
+# ─────────────────────────────────────────
+# HOME
+# ─────────────────────────────────────────
 
 def home_view(request):
     recent_lost  = Item.objects.filter(report_type='Lost',  status='Active').order_by('-created_at')[:6]
     recent_found = Item.objects.filter(report_type='Found', status='Active').order_by('-created_at')[:6]
     return render(request, 'core/homepage.html', {'recent_lost': recent_lost, 'recent_found': recent_found})
 
+
+# ─────────────────────────────────────────
+# PROFILE
+# ─────────────────────────────────────────
 
 @login_required
 def profile_view(request):
@@ -314,6 +449,10 @@ def profile_view(request):
     reviews = Review.objects.filter(target_user=request.user).order_by('-created_at')
     return render(request, 'core/profile.html', {'form': form, 'reviews': reviews})
 
+
+# ─────────────────────────────────────────
+# ITEM VIEWS
+# ─────────────────────────────────────────
 
 @login_required
 def report_lost_view(request):
@@ -357,6 +496,10 @@ def confirm_recovery_view(request, pk):
     return redirect('core:my_items')
 
 
+# ─────────────────────────────────────────
+# SEARCH
+# ─────────────────────────────────────────
+
 def search_items_view(request):
     form  = ItemSearchForm(request.GET or None)
     items = Item.objects.filter(status='Active')
@@ -385,6 +528,10 @@ def _haversine(lat1, lon1, lat2, lon2):
     return R * 2 * asin(sqrt(a))
 
 
+# ─────────────────────────────────────────
+# MESSAGING
+# ─────────────────────────────────────────
+
 @login_required
 def match_chat_view(request, match_id):
     match   = get_object_or_404(Match, pk=match_id)
@@ -405,6 +552,10 @@ def match_chat_view(request, match_id):
     return render(request, 'core/match_chat.html', {'match': match, 'messages': msgs, 'form': form})
 
 
+# ─────────────────────────────────────────
+# NOTIFICATIONS
+# ─────────────────────────────────────────
+
 @login_required
 def notifications_view(request):
     notifs = Notification.objects.filter(recipient=request.user).order_by('-created_at')
@@ -418,6 +569,10 @@ def notification_count_api(request):
         return JsonResponse({'count': count})
     return JsonResponse({'count': 0})
 
+
+# ─────────────────────────────────────────
+# REVIEW
+# ─────────────────────────────────────────
 
 @login_required
 def submit_review_view(request, item_id, target_user_id):
