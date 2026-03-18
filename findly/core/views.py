@@ -16,7 +16,7 @@ from .forms import (
     ReportLostItemForm, ReportFoundItemForm, ItemSearchForm,
     MessageForm, ReviewForm,
 )
-from .models import User, Item, Match, Message, Notification, Review
+from .models import User, Item, Match, Message, Notification, Review, Payment
 from .utils import run_matching_algorithm, send_notification
 
 
@@ -589,6 +589,302 @@ def submit_review_view(request, item_id, target_user_id):
         return redirect('core:home')
     return render(request, 'core/review.html', {'form': form, 'target_user': target_user, 'item': item})
 
+
+# ─────────────────────────────────────────
+# PAYMENT EMAIL
+# ─────────────────────────────────────────
+
+def send_payment_email(match, payment):
+    user   = match.found_item.reporter
+    owner  = match.lost_item.reporter
+    amount = payment.amount
+    txn_id = payment.transaction_id
+
+    html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Reward Received - Findly</title>
+</head>
+<body style="margin:0;padding:0;background-color:#09090B;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#09090B;padding:40px 20px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background-color:#121214;border-radius:20px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
+
+  <tr>
+    <td style="background:linear-gradient(135deg,#059669,#10b981);padding:40px;text-align:center;">
+      <table cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 16px auto;">
+        <tr>
+          <td width="60" height="60" style="background:rgba(255,255,255,0.15);border-radius:16px;text-align:center;vertical-align:middle;">
+            <span style="font-size:28px;line-height:60px;">&#128176;</span>
+          </td>
+        </tr>
+      </table>
+      <h1 style="margin:0 0 8px 0;color:#ffffff;font-size:28px;font-weight:800;">Reward Received!</h1>
+      <p style="margin:0;color:rgba(255,255,255,0.75);font-size:14px;">Payment confirmed on Findly</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding:36px 40px;">
+      <h2 style="margin:0 0 12px 0;color:#f4f4f5;font-size:20px;font-weight:700;">Hello, {user.first_name or 'there'} &#128075;</h2>
+      <p style="margin:0 0 24px 0;color:#71717a;font-size:14px;line-height:1.8;">
+        Great news! You have received a reward payment from <strong style="color:#a1a1aa;">{owner.first_name or 'the owner'} {owner.last_name or ''}</strong> for returning their lost item. Thank you for being an honest member of the Findly community!
+      </p>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:0 0 24px 0;">
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+        <tr>
+          <td style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.15));border:1px solid rgba(16,185,129,0.3);border-radius:14px;padding:28px 20px;text-align:center;">
+            <p style="margin:0 0 8px 0;color:#6ee7b7;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;">Reward Amount</p>
+            <p style="margin:0;color:#ffffff;font-size:44px;font-weight:800;font-family:'Courier New',monospace;">&#8377;{amount}</p>
+          </td>
+        </tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <tr>
+          <td style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <span style="color:#71717a;font-size:12px;">Transaction ID</span>
+                <span style="color:#f4f4f5;font-size:12px;font-weight:600;float:right;font-family:monospace;">{txn_id}</span>
+              </td></tr>
+              <tr><td style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <span style="color:#71717a;font-size:12px;">Paid By</span>
+                <span style="color:#f4f4f5;font-size:12px;font-weight:600;float:right;">{owner.first_name or ''} {owner.last_name or ''}</span>
+              </td></tr>
+              <tr><td style="padding:6px 0;">
+                <span style="color:#71717a;font-size:12px;">Item Returned</span>
+                <span style="color:#f4f4f5;font-size:12px;font-weight:600;float:right;">{match.lost_item.category}</span>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="background:linear-gradient(135deg,rgba(37,99,235,0.1),rgba(79,70,229,0.1));border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:20px;text-align:center;">
+            <p style="margin:0 0 8px 0;font-size:24px;">&#127775;</p>
+            <p style="margin:0 0 4px 0;color:#e4e4e7;font-size:14px;font-weight:700;">Good Samaritan Award</p>
+            <p style="margin:0;color:#71717a;font-size:13px;">Keep returning items to build your reputation on Findly!</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="background:#0a0a0c;border-top:1px solid rgba(255,255,255,0.06);padding:24px 40px;text-align:center;">
+      <p style="margin:0 0 4px 0;color:#3f3f46;font-size:12px;">This email was sent to <span style="color:#52525b;">{user.email}</span></p>
+      <p style="margin:0;color:#3f3f46;font-size:12px;">&#169; 2026 Findly. All rights reserved.</p>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+    text_body = f"Hello {user.first_name or 'there'},\n\nYou received a reward of ₹{amount}!\nTransaction ID: {txn_id}\nPaid by: {owner.first_name or 'the owner'}\n\n© 2026 Findly"
+    try:
+        msg = EmailMultiAlternatives(
+            subject=f"💰 You received ₹{amount} reward on Findly!",
+            body=text_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email]
+        )
+        msg.attach_alternative(html_body, "text/html")
+        msg.send()
+        print(f"Payment email sent to finder: {user.email}")
+    except Exception as e:
+        print(f"Payment email failed: {e}")
+
+
+# ─────────────────────────────────────────
+# PAYMENT VIEWS
+# ─────────────────────────────────────────
+
+@login_required
+def payment_view(request, match_id):
+    match = get_object_or_404(Match, pk=match_id)
+
+    # Only owner of the lost item can pay
+    if request.user != match.lost_item.reporter:
+        messages.error(request, "Only the item owner can make this payment.")
+        return redirect('found:owner_dashboard')
+
+    # Redirect if no reward set
+    if not match.lost_item.reward_amount or match.lost_item.reward_amount <= 0:
+        messages.error(request, "No reward amount set for this item.")
+        return redirect('found:owner_dashboard')
+
+    # Redirect if already paid
+    try:
+        if match.payment.status == 'Completed':
+            messages.info(request, "Reward already paid for this match.")
+            return redirect('core:payment_success', match_id=match_id)
+    except Payment.DoesNotExist:
+        pass
+
+    finder = match.found_item.reporter
+    return render(request, 'core/payment.html', {
+        'match'  : match,
+        'amount' : match.lost_item.reward_amount,
+        'finder' : finder,
+    })
+
+
+@login_required
+def process_payment_view(request, match_id):
+    if request.method != 'POST':
+        return redirect('core:payment', match_id=match_id)
+
+    match  = get_object_or_404(Match, pk=match_id)
+
+    # Security check
+    if request.user != match.lost_item.reporter:
+        messages.error(request, "Unauthorized payment attempt.")
+        return redirect('found:owner_dashboard')
+
+    amount = match.lost_item.reward_amount
+
+    # Generate transaction ID
+    import string
+    transaction_id = 'FDL_' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
+
+    # Create or update payment record
+    payment, created = Payment.objects.get_or_create(
+        match    = match,
+        defaults = {
+            'payer'          : request.user,
+            'receiver'       : match.found_item.reporter,
+            'amount'         : amount,
+            'status'         : 'Completed',
+            'transaction_id' : transaction_id,
+        }
+    )
+    if not created:
+        payment.status         = 'Completed'
+        payment.transaction_id = transaction_id
+        payment.save()
+
+    # In-app notification to finder
+    send_notification(
+        match.found_item.reporter,
+        f"💰 You received a reward of ₹{amount} from {request.user.first_name or request.user.email} for returning the {match.lost_item.category}!"
+    )
+
+    # Send payment email to finder
+    send_payment_email(match, payment)
+
+    messages.success(request, f"✅ Reward of ₹{amount} successfully sent to {match.found_item.reporter.first_name or 'the finder'}!")
+    return redirect('core:payment_success', match_id=match_id)
+
+
+@login_required
+def payment_success_view(request, match_id):
+    match   = get_object_or_404(Match, pk=match_id)
+    payment = get_object_or_404(Payment, match=match)
+
+    # Only owner or finder can see this
+    allowed = [match.lost_item.reporter, match.found_item.reporter]
+    if request.user not in allowed:
+        return redirect('core:home')
+
+    return render(request, 'core/payment_success.html', {
+        'match'  : match,
+        'payment': payment,
+        'finder' : match.found_item.reporter,
+    })
+
+
+# ─────────────────────────────────────────
+# PLACEHOLDER DASHBOARD VIEWS
+# ─────────────────────────────────────────
+
+# ─────────────────────────────────────────
+# FORGOT PASSWORD
+# ─────────────────────────────────────────
+
+def forgotPasswordView(request):
+    if request.method == "POST":
+        email = request.POST.get('email', '').strip()
+        try:
+            user = User.objects.get(email=email)
+            otp  = str(random.randint(100000, 999999))
+            user.otp_code       = otp
+            user.otp_created_at = timezone.now()
+            user.save()
+            send_otp_email(user, otp)
+            request.session['reset_email'] = user.email
+            messages.success(request, f"OTP sent to {user.email}. Check your inbox.")
+            return redirect('core:forgot_otp')
+        except User.DoesNotExist:
+            messages.error(request, "No account found with that email.")
+    return render(request, 'core/forgot_password.html')
+
+
+def forgotOtpView(request):
+    email = request.session.get('reset_email')
+    if not email:
+        return redirect('core:forgot_password')
+    if request.method == "POST":
+        otp_entered = request.POST.get('otp', '').strip()
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            messages.error(request, "User not found.")
+            return redirect('core:forgot_password')
+        if user.otp_created_at:
+            expiry = user.otp_created_at + timezone.timedelta(minutes=10)
+            if timezone.now() > expiry:
+                messages.error(request, "OTP expired. Please try again.")
+                return redirect('core:forgot_password')
+        if otp_entered == user.otp_code:
+            user.otp_code       = None
+            user.otp_created_at = None
+            user.save()
+            request.session['reset_verified'] = True
+            return redirect('core:reset_password')
+        else:
+            messages.error(request, "Incorrect OTP. Please try again.")
+    return render(request, 'core/forgot_otp.html', {'email': email})
+
+
+def resetPasswordView(request):
+    email    = request.session.get('reset_email')
+    verified = request.session.get('reset_verified')
+    if not email or not verified:
+        return redirect('core:forgot_password')
+    if request.method == "POST":
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
+        if len(password1) < 8:
+            messages.error(request, "Password must be at least 8 characters.")
+        elif password1 != password2:
+            messages.error(request, "Passwords do not match.")
+        else:
+            try:
+                user = User.objects.get(email=email)
+                user.set_password(password1)
+                user.save()
+                del request.session['reset_email']
+                del request.session['reset_verified']
+                messages.success(request, "Password reset successfully! Please log in.")
+                return redirect('core:login')
+            except User.DoesNotExist:
+                messages.error(request, "User not found.")
+    return render(request, 'core/reset_password.html', {'email': email})
+
+
+# ─────────────────────────────────────────
+# PLACEHOLDER DASHBOARD VIEWS
+# ─────────────────────────────────────────
 
 def admin_dashboard(request):
     return render(request, 'admin_dashboard.html')

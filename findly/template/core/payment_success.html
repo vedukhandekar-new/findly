@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findly | Payment Successful</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen flex items-center justify-center px-4">
+<div class="w-full max-w-md text-center">
+
+    <!-- Success Icon -->
+    <div class="w-24 h-24 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
+        <i data-lucide="check-circle" class="w-12 h-12 text-emerald-400"></i>
+    </div>
+
+    <h1 class="text-3xl font-extrabold text-zinc-100 mb-2">Payment Successful!</h1>
+    <p class="text-zinc-500 text-sm mb-8">Your reward has been sent to the finder</p>
+
+    <!-- Receipt Card -->
+    <div class="bg-[#121214] border border-white/10 rounded-2xl p-6 mb-6 text-left">
+        <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4 text-center">Receipt</p>
+
+        <div class="text-center mb-5">
+            <p class="text-zinc-500 text-xs mb-1">Amount Paid</p>
+            <p class="text-emerald-400 text-4xl font-extrabold">₹{{ payment.amount }}</p>
+        </div>
+
+        <hr class="border-white/5 mb-4">
+
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-zinc-500 text-sm">Transaction ID</span>
+                <span class="text-zinc-300 text-sm font-mono">{{ payment.transaction_id }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-zinc-500 text-sm">Paid To</span>
+                <span class="text-zinc-300 text-sm font-semibold">{{ finder.first_name }} {{ finder.last_name }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-zinc-500 text-sm">Item</span>
+                <span class="text-zinc-300 text-sm">{{ match.lost_item.category }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-zinc-500 text-sm">Status</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    ✓ Completed
+                </span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-zinc-500 text-sm">Date</span>
+                <span class="text-zinc-300 text-sm">{{ payment.created_at|date:"M d, Y H:i" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="{% url 'found:owner_dashboard' %}"
+        class="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.2)] border border-blue-500/50">
+        <i data-lucide="home" class="w-4 h-4"></i> Back to Dashboard
+    </a>
+
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+</script>
+</body>
+</html>

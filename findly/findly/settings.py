@@ -138,3 +138,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'findlyintern@gmail.com'
 EMAIL_HOST_PASSWORD = 'aaif fchc zasq xmut'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+LOGIN_URL = '/login/'

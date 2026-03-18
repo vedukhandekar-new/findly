@@ -62,6 +62,7 @@ class User(AbstractBaseUser):
     is_staff   = models.BooleanField(default=False)
     is_admin   = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    reward_amount   = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
@@ -108,10 +109,11 @@ class Item(models.Model):
     description     = models.TextField()
     image           = models.ImageField(upload_to='item_images/', blank=True, null=True)
     qr_code_id      = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    latitude        = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude       = models.DecimalField(max_digits=9, decimal_places=6)
+    latitude        = models.DecimalField(max_digits=22, decimal_places=16, default=0)
+    longitude       = models.DecimalField(max_digits=22, decimal_places=16, default=0)
     status          = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
     timestamp_event = models.DateTimeField()
+    reward_amount   = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     created_at      = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -194,3 +196,25 @@ class Review(models.Model):
         if avg:
             self.target_user.rating_score = round(avg, 2)
             self.target_user.save()
+
+
+# PAYMENT MODEL
+# ─────────────────────────────────────────
+
+class Payment(models.Model):
+    STATUS_CHOICES = [
+        ('Pending',   'Pending'),
+        ('Completed', 'Completed'),
+        ('Failed',    'Failed'),
+    ]
+    payment_id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    match              = models.OneToOneField(Match, on_delete=models.CASCADE, related_name='payment')
+    payer              = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments_made')
+    receiver           = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments_received')
+    amount             = models.DecimalField(max_digits=8, decimal_places=2)
+    status             = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    transaction_id     = models.CharField(max_length=100, blank=True, null=True)
+    created_at         = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Payment ₹{self.amount} from {self.payer.email} → {self.receiver.email} [{self.status}]"

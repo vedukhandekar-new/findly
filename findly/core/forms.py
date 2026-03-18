@@ -47,7 +47,7 @@ class UserProfileForm(forms.ModelForm):
 class ReportLostItemForm(forms.ModelForm):
     class Meta:
         model  = Item
-        fields = ['category', 'description', 'image', 'latitude', 'longitude', 'timestamp_event']
+        fields = ['category', 'description', 'image', 'latitude', 'longitude', 'timestamp_event', 'reward_amount']
         widgets = {
             'category':        forms.Select(attrs={'class': 'form-select'}),
             'description':     forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
@@ -55,6 +55,7 @@ class ReportLostItemForm(forms.ModelForm):
             'latitude':        forms.HiddenInput(),
             'longitude':       forms.HiddenInput(),
             'timestamp_event': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'reward_amount':   forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'placeholder': '0'}),
         }
 
     def save(self, commit=True, reporter=None):

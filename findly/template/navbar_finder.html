@@ -44,9 +44,9 @@
         {% if request.user.profile_image %}
             <img src="{{ request.user.profile_image.url }}" class="w-full h-full object-cover"/>
         {% else %}
-            <span class="text-xs font-bold text-zinc-300">
-              {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
-            </span>
+          <span class="text-xs font-bold text-zinc-300">
+            {{ request.user.first_name|default:"A"|first|upper }}{{ request.user.last_name|default:""|first|upper }}
+          </span>
         {% endif %}
       </a>
       <!-- Notification Bell -->

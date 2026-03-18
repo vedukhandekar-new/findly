@@ -38,7 +38,7 @@
                         class="w-20 h-20 rounded-2xl object-cover border-2 border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.5)]"/>
                 {% else %}
                     <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-2xl font-extrabold text-white shadow-[0_0_30px_rgba(59,130,246,0.3)]">
-                        {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                        {{ request.user.first_name|default:"?"|first|upper }}{{ request.user.last_name|default:""|first|upper }}
                     </div>
                 {% endif %}
                 <!-- Camera icon overlay -->
