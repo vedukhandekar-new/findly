@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findly | Block Item</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen">
+
+{% include 'navbar_admin.html' %}
+
+<main class="max-w-lg mx-auto px-4 sm:px-6 py-10">
+
+    <a href="{% url 'found:flagged_items' %}"
+        class="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-6">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Flagged Items
+    </a>
+
+    <div class="text-center mb-8">
+        <div class="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="shield-x" class="w-8 h-8 text-red-400"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold text-zinc-100">Block Item</h1>
+        <p class="text-zinc-400 text-sm mt-2">This will hide the item from all users</p>
+    </div>
+
+    <!-- Item Summary -->
+    <div class="bg-[#121214] border border-white/10 rounded-2xl p-4 mb-6">
+        <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Item Details</p>
+        <p class="text-zinc-100 font-semibold">{{ item.category }}</p>
+        <p class="text-zinc-500 text-xs mt-1">{{ item.description|truncatechars:80 }}</p>
+        <p class="text-zinc-600 text-xs mt-2">Reporter: {{ item.reporter.email }}</p>
+        {% if item.flag_count > 0 %}
+            <span class="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-red-500/10 text-red-400 border border-red-500/20">
+                {{ item.flag_count }} flag{{ item.flag_count|pluralize }}
+            </span>
+        {% endif %}
+    </div>
+
+    <div class="bg-[#121214] border border-red-500/20 rounded-2xl p-6">
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5">
+                    Reason for blocking
+                </label>
+                <select name="reason"
+                    class="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-white/10 text-zinc-300 text-sm focus:outline-none focus:border-red-500/50 transition-all">
+                    <option value="Dangerous or harmful item">Dangerous or harmful item</option>
+                    <option value="Weapon or hazardous material">Weapon or hazardous material</option>
+                    <option value="Stolen item report">Stolen item report</option>
+                    <option value="Fake or misleading report">Fake or misleading report</option>
+                    <option value="Violates community guidelines">Violates community guidelines</option>
+                    <option value="Under police investigation">Under police investigation</option>
+                </select>
+            </div>
+            <div class="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
+                <p class="text-xs text-red-400 flex items-start gap-2">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+                    This will immediately hide the item from all users and notify the reporter.
+                </p>
+            </div>
+            <button type="submit"
+                class="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-all border border-red-500/50 flex items-center justify-center gap-2">
+                <i data-lucide="shield-x" class="w-4 h-4"></i> Block This Item
+            </button>
+        </form>
+    </div>
+
+</main>
+<script>
+    document.addEventListener("DOMContentLoaded", () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+</script>
+</body>
+</html>

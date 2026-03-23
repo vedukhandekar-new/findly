@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findly | Manage Users</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: { zinc: { 50:'#FAFAFA',100:'#F4F4F5',200:'#E4E4E7',300:'#D4D4D8',400:'#A1A1AA',500:'#71717A',600:'#52525B',700:'#3F3F46',800:'#27272A',900:'#18181B',950:'#09090B' } } } }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen">
+
+{% include 'navbar_admin.html' %}
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+
+    <!-- Glow -->
+    <div class="absolute top-0 left-1/4 w-[400px] h-[400px] bg-red-500/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-zinc-100">Manage Users</h1>
+            <p class="text-zinc-500 text-sm mt-1">View, search and control all registered users</p>
+        </div>
+        <a href="{% url 'found:admin_dashboard' %}"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-zinc-400 text-sm font-medium hover:text-zinc-200 transition-all">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-[#121214] border border-white/10 rounded-2xl p-5 text-center">
+            <p class="text-3xl font-extrabold text-zinc-100 mb-1">{{ total_users }}</p>
+            <p class="text-xs text-zinc-500 uppercase tracking-wider">Total Users</p>
+        </div>
+        <div class="bg-[#121214] border border-emerald-500/20 rounded-2xl p-5 text-center">
+            <p class="text-3xl font-extrabold text-emerald-400 mb-1">{{ active_users }}</p>
+            <p class="text-xs text-zinc-500 uppercase tracking-wider">Active</p>
+        </div>
+        <div class="bg-[#121214] border border-red-500/20 rounded-2xl p-5 text-center">
+            <p class="text-3xl font-extrabold text-red-400 mb-1">{{ inactive_users }}</p>
+            <p class="text-xs text-zinc-500 uppercase tracking-wider">Inactive</p>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="mb-4 px-4 py-3 rounded-xl border text-sm
+                {% if msg.tags == 'success' %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                {% else %}bg-red-500/10 border-red-500/20 text-red-400{% endif %}">
+                {{ msg }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Search & Filter -->
+    <form method="GET" class="bg-[#121214] border border-white/10 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3">
+        <!-- Search -->
+        <div class="relative flex-1">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600"></i>
+            <input type="text" name="search" value="{{ search }}" placeholder="Search by name or email..."
+                class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-zinc-100 text-sm placeholder-zinc-600 focus:outline-none focus:border-blue-500/50 transition-all"/>
+        </div>
+        <!-- Role Filter -->
+        <select name="role"
+            class="px-4 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-zinc-300 text-sm focus:outline-none focus:border-blue-500/50 transition-all">
+            <option value="" {% if not role_filter %}selected{% endif %}>All Roles</option>
+            <option value="Owner"  {% if role_filter == 'Owner' %}selected{% endif %}>Owner</option>
+            <option value="Finder" {% if role_filter == 'Finder' %}selected{% endif %}>Finder</option>
+            <option value="Admin"  {% if role_filter == 'Admin' %}selected{% endif %}>Admin</option>
+        </select>
+        <button type="submit"
+            class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-all border border-blue-500/50">
+            Search
+        </button>
+        {% if search or role_filter %}
+            <a href="{% url 'found:manage_users' %}"
+                class="px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-zinc-400 text-sm font-medium hover:text-zinc-200 transition-all flex items-center gap-1.5">
+                <i data-lucide="x" class="w-3.5 h-3.5"></i> Clear
+            </a>
+        {% endif %}
+    </form>
+
+    <!-- Users Table -->
+    <div class="bg-[#121214] border border-white/10 rounded-2xl overflow-hidden">
+
+        <!-- Table Header -->
+        <div class="px-5 py-3 border-b border-white/5 bg-white/[0.02] grid grid-cols-12 gap-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+            <div class="col-span-4">User</div>
+            <div class="col-span-2">Role</div>
+            <div class="col-span-2 text-center">Items</div>
+            <div class="col-span-2 text-center">Recovered</div>
+            <div class="col-span-2 text-right">Action</div>
+        </div>
+
+        {% if users %}
+            <div class="divide-y divide-white/5">
+                {% for user in users %}
+                <div class="px-5 py-4 grid grid-cols-12 gap-4 items-center hover:bg-white/[0.02] transition-all">
+
+                    <!-- User Info -->
+                    <div class="col-span-4 flex items-center gap-3 min-w-0">
+                        <!-- Avatar -->
+                        <div class="w-9 h-9 rounded-xl flex-shrink-0 overflow-hidden">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover"/>
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-xs font-bold
+                                    {% if user.role == 'Admin' %}bg-red-500/20 text-red-400
+                                    {% elif user.role == 'Finder' %}bg-emerald-500/20 text-emerald-400
+                                    {% else %}bg-blue-500/20 text-blue-400{% endif %}">
+                                    {{ user.first_name|default:"?"|first|upper }}{{ user.last_name|default:""|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-zinc-100 truncate">
+                                {{ user.first_name|default:"" }} {{ user.last_name|default:"" }}
+                                {% if not user.first_name and not user.last_name %}
+                                    <span class="text-zinc-500">No name</span>
+                                {% endif %}
+                            </p>
+                            <p class="text-xs text-zinc-500 truncate">{{ user.email }}</p>
+                            <p class="text-xs text-zinc-700">Joined {{ user.created_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Role -->
+                    <div class="col-span-2">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold
+                            {% if user.role == 'Admin' %}bg-red-500/10 text-red-400 border border-red-500/20
+                            {% elif user.role == 'Finder' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                            {% else %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% endif %}">
+                            {{ user.role }}
+                        </span>
+                    </div>
+
+                    <!-- Total Items -->
+                    <div class="col-span-2 text-center">
+                        <span class="text-sm font-bold text-zinc-100">{{ user.total_items }}</span>
+                        <p class="text-xs text-zinc-600">items</p>
+                    </div>
+
+                    <!-- Recovered -->
+                    <div class="col-span-2 text-center">
+                        <span class="text-sm font-bold text-emerald-400">{{ user.recovered_items }}</span>
+                        <p class="text-xs text-zinc-600">recovered</p>
+                    </div>
+
+                    <!-- Action -->
+                    <div class="col-span-2 flex justify-end">
+                        {% if user != request.user %}
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" value="{{ user.pk }}"/>
+                                {% if user.is_active %}
+                                    <input type="hidden" name="action" value="deactivate"/>
+                                    <button type="submit"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold border border-red-500/20 transition-all"
+                                        onclick="return confirm('Deactivate {{ user.email }}?')">
+                                        <i data-lucide="user-x" class="w-3.5 h-3.5"></i> Deactivate
+                                    </button>
+                                {% else %}
+                                    <input type="hidden" name="action" value="activate"/>
+                                    <button type="submit"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold border border-emerald-500/20 transition-all">
+                                        <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Activate
+                                    </button>
+                                {% endif %}
+                            </form>
+                        {% else %}
+                            <span class="text-xs text-zinc-600 italic">You</span>
+                        {% endif %}
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <div class="p-16 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="users" class="w-7 h-7 text-zinc-600"></i>
+                </div>
+                <h3 class="text-sm font-semibold text-zinc-400 mb-2">No users found</h3>
+                <p class="text-zinc-600 text-xs">Try a different search term or clear filters.</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Results count -->
+    {% if users %}
+        <p class="text-xs text-zinc-600 mt-3 text-right">
+            Showing {{ users|length }} user{{ users|length|pluralize }}
+            {% if search %}for "{{ search }}"{% endif %}
+        </p>
+    {% endif %}
+
+</main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+</script>
+</body>
+</html>

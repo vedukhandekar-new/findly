@@ -100,6 +100,8 @@ class Item(models.Model):
         ('Active',    'Active'),
         ('Matching',  'Matching'),
         ('Recovered', 'Recovered'),
+        ('Blocked',   'Blocked'),
+        ('UnderReview', 'Under Review'),
     ]
 
     item_id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -111,10 +113,18 @@ class Item(models.Model):
     qr_code_id      = models.CharField(max_length=100, unique=True, blank=True, null=True)
     latitude        = models.DecimalField(max_digits=22, decimal_places=16, default=0)
     longitude       = models.DecimalField(max_digits=22, decimal_places=16, default=0)
-    status          = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Active')
+    status          = models.CharField(max_length=15, choices=STATUS_CHOICES, default='Active')
     timestamp_event = models.DateTimeField()
     reward_amount   = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     created_at      = models.DateTimeField(auto_now_add=True)
+    # Add to Item model in core/models.py
+    is_sensitive    = models.BooleanField(default=False)
+    is_blocked      = models.BooleanField(default=False)
+    blocked_reason  = models.CharField(max_length=255, null=True, blank=True)
+    blocked_by      = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='blocked_items')
+    blocked_at      = models.DateTimeField(null=True, blank=True)
+    flagged_by      = models.ManyToManyField(User, blank=True, related_name='flagged_items')
+    flag_count      = models.IntegerField(default=0)
 
     def __str__(self):
         return f"[{self.report_type}] {self.category} by {self.reporter.email} — {self.status}"

@@ -12,4 +12,8 @@ urlpatterns = [
 
     # ── New: Admin resolve a match (verify or reject) ─────────
     path('match/<uuid:match_id>/<str:action>/', views.adminResolveMatchView, name='resolve_match'),
+    path('manage-users/', views.manageUsersView, name='manage_users'),
+    path('block-item/<uuid:pk>/',   views.blockItemView,   name='block_item'),
+    path('unblock-item/<uuid:pk>/', views.unblockItemView, name='unblock_item'),
+    path('flagged-items/',          views.flaggedItemsView, name='flagged_items'),
 ]

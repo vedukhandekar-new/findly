@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findly | Page Not Found</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen flex items-center justify-center px-4">
+
+<!-- Ambient glows -->
+<div class="fixed top-0 left-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="fixed bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+<div class="text-center relative z-10 max-w-lg mx-auto">
+
+    <!-- Logo -->
+    <a href="/" class="inline-flex items-center gap-2 mb-12">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+            <i data-lucide="search" class="w-5 h-5 text-white"></i>
+        </div>
+        <span class="text-2xl font-extrabold tracking-tight">Findly</span>
+    </a>
+
+    <!-- 404 Number -->
+    <div class="relative mb-6">
+        <h1 class="text-[150px] font-extrabold leading-none tracking-tighter
+            bg-gradient-to-b from-zinc-600 to-zinc-800 bg-clip-text text-transparent
+            select-none">
+            404
+        </h1>
+        <!-- Floating icon in center -->
+        <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-20 h-20 rounded-2xl bg-[#121214] border border-white/10 flex items-center justify-center shadow-2xl">
+                <i data-lucide="map-pin-off" class="w-10 h-10 text-zinc-500"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message -->
+    <h2 class="text-2xl font-extrabold text-zinc-100 mb-3">Page Not Found</h2>
+    <p class="text-zinc-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
+        Looks like this page got lost too! Don't worry — we're good at finding things. Let's get you back on track.
+    </p>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-center gap-3 flex-wrap">
+        <a href="/"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.2)] border border-blue-500/50">
+            <i data-lucide="home" class="w-4 h-4"></i> Go Home
+        </a>
+        <button onclick="history.back()"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-zinc-400 font-semibold text-sm hover:text-zinc-100 hover:border-white/20 transition-all">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Go Back
+        </button>
+    </div>
+
+    <!-- Fun message -->
+    <p class="text-zinc-700 text-xs mt-10">
+        Error 404 · Page not found · Findly Lost &amp; Found
+    </p>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+</script>
+</body>
+</html>

@@ -5,6 +5,7 @@ from django.db.models import Count
 from core.models import Item, Match, Notification, Review, User
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from django.db.models import Q
 
 
 def send_recovery_email_owner(match):
@@ -213,6 +214,79 @@ def adminDashboardView(request):
     }
     return render(request, 'found/admin_dashboard.html', context)
 
+@login_required
+def blockItemView(request, pk):
+    if request.user.role != 'Admin':
+        return redirect('core:home')
+
+    item = get_object_or_404(Item, pk=pk)
+
+    if request.method == 'POST':
+        reason = request.POST.get('reason', 'Blocked by Admin')
+        item.is_blocked     = True
+        item.status         = 'Blocked'
+        item.blocked_reason = reason
+        item.blocked_by     = request.user
+        item.blocked_at     = timezone.now()
+        item.save()
+
+        # Notify item reporter
+        from core.utils import send_notification
+        send_notification(
+            item.reporter,
+            f"⚠️ Your reported {item.category} has been restricted by Admin. Reason: {reason}"
+        )
+
+        messages.success(request, f"✅ Item blocked successfully.")
+        return redirect('found:flagged_items')
+
+    return render(request, 'found/block_item.html', {'item': item})
+
+
+@login_required
+def unblockItemView(request, pk):
+    if request.user.role != 'Admin':
+        return redirect('core:home')
+
+    item = get_object_or_404(Item, pk=pk)
+    item.is_blocked     = False
+    item.status         = 'Active'
+    item.blocked_reason = None
+    item.blocked_by     = None
+    item.blocked_at     = None
+    item.save()
+
+    send_notification(
+        item.reporter,
+        f"✅ Your reported {item.category} has been reviewed and is now active again."
+    )
+
+    messages.success(request, "Item unblocked and set back to Active.")
+    return redirect('found:flagged_items')
+
+
+@login_required
+def flaggedItemsView(request):
+    if request.user.role != 'Admin':
+        return redirect('core:home')
+
+    flagged_items = Item.objects.filter(
+        flag_count__gt=0
+    ).order_by('-flag_count', '-created_at')
+
+    blocked_items = Item.objects.filter(
+        is_blocked=True
+    ).order_by('-blocked_at')
+
+    under_review = Item.objects.filter(
+        status='UnderReview'
+    ).order_by('-created_at')
+
+    return render(request, 'found/flagged_items.html', {
+        'flagged_items' : flagged_items,
+        'blocked_items' : blocked_items,
+        'under_review'  : under_review,
+    })
 
 @login_required
 def adminResolveMatchView(request, match_id, action):
@@ -336,3 +410,67 @@ def reviewMatchView(request):
     ).order_by('-created_at')
 
     return render(request, 'found/review_match.html', {'pending_matches': pending_matches})
+
+# ─────────────────────────────────────────
+# MANAGE USERS
+# ─────────────────────────────────────────
+
+@login_required
+def manageUsersView(request):
+    if request.user.role != 'Admin':
+        return redirect('core:home')
+
+    # Get search query and role filter
+    search = request.GET.get('search', '').strip()
+    role   = request.GET.get('role', '')
+
+    users = User.objects.all().order_by('-created_at')
+
+    if search:
+        users = users.filter(
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search)  |
+            Q(email__icontains=search)
+        )
+    if role:
+        users = users.filter(role=role)
+
+    # Annotate each user with item counts
+    from django.db.models import Count
+    users = users.annotate(
+        total_items=Count('reported_items', distinct=True),
+        recovered_items=Count(
+            'reported_items',
+            filter=Q(reported_items__status='Recovered'),
+            distinct=True
+        )
+    )
+
+    # Handle activate/deactivate
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        action  = request.POST.get('action')
+        try:
+            target_user = User.objects.get(pk=user_id)
+            if target_user == request.user:
+                messages.error(request, "You cannot deactivate your own account!")
+            elif action == 'deactivate':
+                target_user.is_active = False
+                target_user.save()
+                messages.success(request, f"✅ {target_user.email} has been deactivated.")
+            elif action == 'activate':
+                target_user.is_active = True
+                target_user.save()
+                messages.success(request, f"✅ {target_user.email} has been activated.")
+        except User.DoesNotExist:
+            messages.error(request, "User not found.")
+        return redirect('found:manage_users')
+
+    return render(request, 'found/manage_users.html', {
+        'users':       users,
+        'search':      search,
+        'role_filter': role,
+        'total_users': User.objects.count(),
+        'active_users': User.objects.filter(is_active=True).count(),
+        'inactive_users': User.objects.filter(is_active=False).count(),
+    })

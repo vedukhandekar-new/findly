@@ -293,6 +293,17 @@ def send_otp_email(user, otp):
 # ─────────────────────────────────────────
 
 def userSignupView(request):
+
+    # Redirect if already logged in
+    if request.user.is_authenticated:
+        if request.user.role == "Admin":
+            return redirect("found:admin_dashboard")
+        elif request.user.role == "Owner":
+            return redirect("found:owner_dashboard")
+        elif request.user.role == "Finder":
+            return redirect("found:finder_dashboard")
+
+
     if request.method == "POST":
         form = UserSignupForm(request.POST)
         if form.is_valid():
@@ -316,6 +327,16 @@ def userSignupView(request):
 # ─────────────────────────────────────────
 
 def userLoginView(request):
+    
+    # Redirect if already logged in
+    if request.user.is_authenticated:
+        if request.user.role == "Admin":
+            return redirect("found:admin_dashboard")
+        elif request.user.role == "Owner":
+            return redirect("found:owner_dashboard")
+        elif request.user.role == "Finder":
+            return redirect("found:finder_dashboard")
+
     if request.method == "POST":
         form = UserLoginForm(request.POST)
         if form.is_valid():
@@ -429,7 +450,14 @@ def user_logout(request):
 def home_view(request):
     recent_lost  = Item.objects.filter(report_type='Lost',  status='Active').order_by('-created_at')[:6]
     recent_found = Item.objects.filter(report_type='Found', status='Active').order_by('-created_at')[:6]
-    return render(request, 'core/homepage.html', {'recent_lost': recent_lost, 'recent_found': recent_found})
+    total_users     = User.objects.filter(is_active=True).count()
+    total_recovered = Item.objects.filter(status='Recovered').count()
+    return render(request, 'core/homepage.html', {
+        'recent_lost'    : recent_lost,
+        'recent_found'   : recent_found,
+        'total_users'    : total_users,
+        'total_recovered': total_recovered,
+    })
 
 
 # ─────────────────────────────────────────
@@ -478,6 +506,9 @@ def report_found_view(request):
 
 def item_detail_view(request, pk):
     item = get_object_or_404(Item, pk=pk)
+    # Hide blocked items from non-admin users
+    if item.is_blocked and (not request.user.is_authenticated or request.user.role != 'Admin'):
+        return render(request, 'core/item_blocked.html', {'item': item})
     return render(request, 'core/item_detail.html', {'item': item})
 
 
@@ -502,7 +533,7 @@ def confirm_recovery_view(request, pk):
 
 def search_items_view(request):
     form  = ItemSearchForm(request.GET or None)
-    items = Item.objects.filter(status='Active')
+    items = Item.objects.filter(status='Active', is_blocked=False)
     if form.is_valid():
         query       = form.cleaned_data.get('query')
         category    = form.cleaned_data.get('category')
@@ -802,6 +833,39 @@ def payment_success_view(request, match_id):
         'finder' : match.found_item.reporter,
     })
 
+@login_required
+def flag_item_view(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    reasons = [
+        ('Dangerous weapon or harmful item', 'Dangerous weapon or harmful item'),
+        ('Hazardous material or substance',  'Hazardous material or substance'),
+        ('Stolen item',                      'Stolen item'),
+        ('Fake or misleading report',        'Fake or misleading report'),
+        ('Inappropriate content',            'Inappropriate content'),
+        ('Other suspicious activity',        'Other suspicious activity'),
+    ]
+
+    if request.method == 'POST':
+        reason = request.POST.get('reason', '').strip()
+        if request.user in item.flagged_by.all():
+            messages.warning(request, "You have already flagged this item.")
+            return redirect('core:item_detail', pk=pk)
+        item.flagged_by.add(request.user)
+        item.flag_count += 1
+        if item.flag_count >= 3:
+            item.status = 'UnderReview'
+        item.save()
+        admins = User.objects.filter(role='Admin')
+        for admin in admins:
+            send_notification(
+                admin,
+                f"🚨 Item flagged: {item.category} | Reason: {reason} | Flags: {item.flag_count}"
+            )
+        messages.success(request, "✅ Item reported. Thank you for keeping Findly safe!")
+        return redirect('core:item_detail', pk=pk)
+
+    return render(request, 'core/flag_item.html', {'item': item, 'reasons': reasons})
+
 
 # ─────────────────────────────────────────
 # PLACEHOLDER DASHBOARD VIEWS
@@ -894,3 +958,6 @@ def owner_dashboard(request):
 
 def finder_dashboard(request):
     return render(request, 'finder_dashboard.html')
+def custom_404(request, exception=None):
+    return render(request, '404.html', status=404)
+

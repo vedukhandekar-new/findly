@@ -16,8 +16,10 @@
 </head>
 <body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen">
 
+{% include 'navbar_admin.html' %}
+
 <!-- Navbar -->
-<header class="border-b border-white/5 bg-[#09090B]/80 backdrop-blur-md sticky top-0 z-50">
+{% comment %} <header class="border-b border-white/5 bg-[#09090B]/80 backdrop-blur-md sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
     <a href="{% url 'found:admin_dashboard' %}" class="flex items-center gap-2 flex-shrink-0">
       <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.3)]">
@@ -42,7 +44,7 @@
       </a>
     </div>
   </div>
-</header>
+</header> {% endcomment %}
 
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 relative">
 

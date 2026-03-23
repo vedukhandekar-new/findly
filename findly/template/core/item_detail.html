@@ -107,6 +107,40 @@
     {% endif %}
   {% endif %}
 
+      <!-- Blocked Banner -->
+    {% if item.is_blocked %}
+        <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 mb-6 flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="shield-x" class="w-5 h-5 text-red-400"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-red-400 mb-1">🚫 Restricted by Admin</h3>
+                <p class="text-xs text-zinc-400">{{ item.blocked_reason }}</p>
+                <p class="text-xs text-zinc-600 mt-1">Blocked on {{ item.blocked_at|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Under Review Banner -->
+    {% if item.status == 'UnderReview' %}
+        <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-6 flex items-center gap-3">
+            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400 flex-shrink-0"></i>
+            <div>
+                <p class="text-sm font-semibold text-amber-400">Under Admin Review</p>
+                <p class="text-xs text-zinc-500">This item has been flagged and is being reviewed by our team.</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Flag Button — only show if not blocked and not own item -->
+    {% if request.user != item.reporter and not item.is_blocked %}
+        <a href="{% url 'core:flag_item' item.item_id %}"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs font-medium hover:bg-red-500/10 transition-all">
+            <i data-lucide="flag" class="w-3.5 h-3.5"></i>
+            Report Suspicious Item
+        </a>
+    {% endif %}
+
 </div>
 </div>
 <script>lucide.createIcons();</script>

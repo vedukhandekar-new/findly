@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findly | Flag Item</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen">
+
+{% if request.user.role == 'Admin' %}
+    {% include 'navbar_admin.html' %}
+{% elif request.user.role == 'Finder' %}
+    {% include 'navbar_finder.html' %}
+{% else %}
+    {% include 'navbar_owner.html' %}
+{% endif %}
+
+<main class="max-w-lg mx-auto px-4 sm:px-6 py-10">
+
+    <a href="{% url 'core:item_detail' item.item_id %}"
+        class="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-6">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Item
+    </a>
+
+    <div class="text-center mb-8">
+        <div class="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="flag" class="w-8 h-8 text-red-400"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold text-zinc-100">Report Suspicious Item</h1>
+        <p class="text-zinc-400 text-sm mt-2">Help keep Findly safe by reporting harmful or suspicious items</p>
+    </div>
+
+    <!-- Item Summary -->
+    <div class="bg-[#121214] border border-white/10 rounded-2xl p-4 mb-6 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-xl flex-shrink-0">
+            {% if item.category == 'Electronics' %}📱
+            {% elif item.category == 'Wallet' %}👛
+            {% elif item.category == 'Keys' %}🔑
+            {% elif item.category == 'Bag' %}👜
+            {% elif item.category == 'Documents' %}📄
+            {% elif item.category == 'Jewellery' %}💍
+            {% else %}📦{% endif %}
+        </div>
+        <div>
+            <p class="text-zinc-100 font-semibold text-sm">{{ item.category }}</p>
+            <p class="text-zinc-500 text-xs">{{ item.description|truncatechars:60 }}</p>
+        </div>
+        {% if item.flag_count > 0 %}
+            <span class="ml-auto px-2 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                {{ item.flag_count }} flag{{ item.flag_count|pluralize }}
+            </span>
+        {% endif %}
+    </div>
+
+    <div class="bg-[#121214] border border-white/10 rounded-2xl p-6">
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">
+                    Why are you flagging this item?
+                </label>
+                <div class="space-y-2">
+                    {% for value, label in reasons %}
+                        <label class="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-zinc-900/50 hover:border-white/10 cursor-pointer transition-all">
+                            <input type="radio" name="reason" value="{{ value }}" class="accent-red-500"/>
+                            <span class="text-sm text-zinc-300">{{ label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit"
+                class="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-all border border-red-500/50 flex items-center justify-center gap-2">
+                <i data-lucide="flag" class="w-4 h-4"></i> Submit Report
+            </button>
+        </form>
+    </div>
+
+</main>
+<script>
+    document.addEventListener("DOMContentLoaded", () => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+</script>
+</body>
+</html>
