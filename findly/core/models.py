@@ -35,8 +35,8 @@ class User(AbstractBaseUser):
 
     ROLE_CHOICES = (
         ('Admin',  'Admin'),
-        ('Owner',  'Owner'),
-        ('Finder', 'Finder'),
+        ('User',  'User'),
+        
     )
     GENDER_CHOICES = (
         ('Male',   'Male'),
@@ -50,7 +50,7 @@ class User(AbstractBaseUser):
     gender     = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
     # ✅ FIX: BigIntegerField does NOT accept max_length — use CharField instead
     mobile     = models.CharField(max_length=15, null=True, blank=True)
-    role       = models.CharField(max_length=10, choices=ROLE_CHOICES, default='Owner')
+    role       = models.CharField(max_length=10, choices=ROLE_CHOICES, default='User')
 
     rating_score = models.DecimalField(max_digits=3, decimal_places=2, default=5.00)
     otp_code       = models.CharField(max_length=6, null=True, blank=True)

@@ -16,12 +16,14 @@
 </head>
 <body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen">
 
-{% if request.user.role == 'Admin' %}
-    {% include 'navbar_admin.html' %}
-{% elif request.user.role == 'Finder' %}
-    {% include 'navbar_finder.html' %}
+{% if request.user.is_authenticated %}
+    {% if request.user.role == 'Admin' %}
+        {% include 'navbar_admin.html' %}
+    {% else %}
+        {% include 'navbar_user.html' %}
+    {% endif %}
 {% else %}
-    {% include 'navbar_owner.html' %}
+    {% include 'navbar.html' %}
 {% endif %}
 
 <main class="max-w-5xl mx-auto px-4 sm:px-6 py-10 relative">

@@ -43,9 +43,9 @@ urlpatterns = [
     path('review/<uuid:item_id>/user/<uuid:target_user_id>/', views.submit_review_view, name='submit_review'),
 
     # ── Payments ──────────────────────────────────────────
-    path('payment/<uuid:match_id>/',         views.payment_view,         name='payment'),
-    path('payment/<uuid:match_id>/process/', views.process_payment_view, name='process_payment'),
-    path('payment/<uuid:match_id>/success/', views.payment_success_view, name='payment_success'),
+    # path('payment/<uuid:match_id>/',         views.payment_view,         name='payment'),
+    # path('payment/<uuid:match_id>/process/', views.process_payment_view, name='process_payment'),
+    # path('payment/<uuid:match_id>/success/', views.payment_success_view, name='payment_success'),
     path('test-404/', views.custom_404, name='test_404'),
     path('item/<uuid:pk>/flag/', views.flag_item_view, name='flag_item'),
 ]

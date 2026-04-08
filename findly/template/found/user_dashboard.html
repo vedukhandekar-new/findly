@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Findly | My Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: { zinc: { 50:'#FAFAFA',100:'#F4F4F5',200:'#E4E4E7',300:'#D4D4D8',400:'#A1A1AA',500:'#71717A',600:'#52525B',700:'#3F3F46',800:'#27272A',900:'#18181B',950:'#09090B' } } } }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#09090B] text-zinc-50 font-sans antialiased min-h-screen">
+
+{% include 'navbar_user.html' %}
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-zinc-100 mb-2">Welcome back, {{ request.user.first_name|default:"User" }}! 👋</h1>
+            <p class="text-zinc-400 text-sm">Manage your lost and found activities in one place.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'core:report_lost' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+                <i data-lucide="search" class="w-4 h-4"></i> Report Lost
+            </a>
+            <a href="{% url 'core:report_found' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                <i data-lucide="package-plus" class="w-4 h-4"></i> Report Found
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2 space-y-10">
+            
+            <section>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                        <i data-lucide="help-circle" class="w-5 h-5 text-blue-400"></i> My Lost Reports
+                    </h2>
+                    <span class="text-xs text-zinc-500">{{ my_lost_items|length }} items</span>
+                </div>
+                
+                {% if my_lost_items %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {% for item in my_lost_items %}
+                        <div class="bg-[#121214] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/5 text-zinc-300 border border-white/10">{{ item.category }}</span>
+                                    <span class="text-xs font-medium {% if item.status == 'Active' %}text-blue-400{% elif item.status == 'Matching' %}text-amber-400{% else %}text-emerald-400{% endif %}">
+                                        • {{ item.status }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-zinc-400 line-clamp-2 mb-4">{{ item.description }}</p>
+                            </div>
+                            <a href="{% url 'core:item_detail' item.item_id %}" class="w-full inline-flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-semibold transition-all">
+                                View Item Detail
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-[#121214] border border-white/5 rounded-2xl p-8 text-center border-dashed">
+                        <p class="text-zinc-500 text-sm">No lost items reported yet.</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <section>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i> My Found Reports
+                    </h2>
+                    <span class="text-xs text-zinc-500">{{ my_found_items|length }} items</span>
+                </div>
+                
+                {% if my_found_items %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {% for item in my_found_items %}
+                        <div class="bg-[#121214] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/5 text-zinc-300 border border-white/10">{{ item.category }}</span>
+                                    <span class="text-xs font-medium {% if item.status == 'Active' %}text-emerald-400{% elif item.status == 'Matching' %}text-amber-400{% else %}text-blue-400{% endif %}">
+                                        • {{ item.status }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-zinc-400 line-clamp-2 mb-4">{{ item.description }}</p>
+                            </div>
+                            <a href="{% url 'core:item_detail' item.item_id %}" class="w-full inline-flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-semibold transition-all">
+                                View Item Detail
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-[#121214] border border-white/5 rounded-2xl p-8 text-center border-dashed">
+                        <p class="text-zinc-500 text-sm">No found items reported yet.</p>
+                    </div>
+                {% endif %}
+            </section>
+
+        </div>
+
+        <div class="space-y-8">
+            
+            <aside>
+                <h2 class="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-5 h-5 text-amber-400"></i> Active Matches
+                </h2>
+                
+                {% if my_matches %}
+                    <div class="space-y-4">
+                        {% for match in my_matches %}
+                        <div class="bg-[#121214] border {% if match.match_status == 'Pending' %}border-amber-500/30{% elif match.match_status == 'Verified' %}border-emerald-500/30{% else %}border-white/10{% endif %} rounded-2xl p-5 relative overflow-hidden transition-all hover:bg-[#161618]">
+                            
+                            <div class="absolute left-0 top-0 bottom-0 w-1 {% if match.match_status == 'Pending' %}bg-amber-500{% elif match.match_status == 'Verified' %}bg-emerald-500{% else %}bg-zinc-700{% endif %}"></div>
+
+                            <div class="mb-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-sm font-bold text-zinc-200">
+                                        {% if match.lost_item.reporter == request.user %}
+                                            Match for your {{ match.lost_item.category }}
+                                        {% else %}
+                                            Found item match: {{ match.found_item.category }}
+                                        {% endif %}
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest
+                                        {% if match.match_status == 'Pending' %}bg-amber-500/10 text-amber-400
+                                        {% elif match.match_status == 'Verified' %}bg-emerald-500/10 text-emerald-400
+                                        {% else %}bg-zinc-800 text-zinc-500{% endif %} border border-white/5">
+                                        {{ match.match_status }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div class="h-full bg-blue-500" style="width: {{ match.ai_confidence }}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-blue-400">{{ match.ai_confidence }}%</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-2">
+                                <a href="{% url 'core:match_chat' match.match_id %}" class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-semibold transition-all border border-white/5">
+                                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Open Secure Chat
+                                </a>
+
+                                {% if match.lost_item.reporter == request.user and match.lost_item.reward_amount > 0 %}
+                                    {% if match.payment and match.payment.status == 'Completed' %}
+                                        <div class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">
+                                            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Reward Paid
+                                        </div>
+                                    {% else %}
+                                        <a href="{% url 'found:payment' match.match_id %}" 
+                                            class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                                             <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Pay ₹{{ match.lost_item.reward_amount }} Reward
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-[#121214] border border-white/5 rounded-2xl p-6 text-center">
+                        <p class="text-zinc-500 text-sm mb-1">No matches found yet.</p>
+                        <p class="text-zinc-600 text-[11px]">We'll notify you as soon as our AI finds a connection.</p>
+                    </div>
+                {% endif %}
+            </aside>
+
+            {% if notifications %}
+            <aside>
+                <h2 class="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <i data-lucide="bell" class="w-4 h-4"></i> Recent Alerts
+                </h2>
+                <div class="bg-[#121214] border border-white/5 rounded-2xl divide-y divide-white/5">
+                    {% for notif in notifications %}
+                    <div class="p-4 hover:bg-white/5 transition-colors">
+                        <p class="text-xs text-zinc-300 leading-relaxed mb-1">{{ notif.message }}</p>
+                        <span class="text-[10px] text-zinc-600">{{ notif.created_at|timesince }} ago</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'core:notifications' %}" class="block text-center text-[11px] font-bold text-blue-400 hover:text-blue-300 mt-3 transition-colors uppercase tracking-widest">
+                    View All Notifications →
+                </a>
+            </aside>
+            {% endif %}
+
+        </div>
+    </div>
+</main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+</script>
+</body>
+</html>

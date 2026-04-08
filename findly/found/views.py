@@ -6,7 +6,11 @@ from core.models import Item, Match, Notification, Review, User
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.db.models import Q
+import razorpay
+from django.views.decorators.csrf import csrf_exempt
 
+# found/views.py
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 def send_recovery_email_owner(match):
     user   = match.lost_item.reporter
@@ -336,60 +340,98 @@ def adminResolveMatchView(request, match_id, action):
 # OWNER DASHBOARD
 # ─────────────────────────────────────────
 
-@login_required
-def ownerDashboardView(request):
-    if request.user.role != 'Owner':
-        return redirect('core:home')
+# @login_required
+# def ownerDashboardView(request):
+#     if request.user.role != 'Owner':
+#         return redirect('core:home')
 
+#     my_lost_items = Item.objects.filter(
+#         reporter=request.user, report_type='Lost'
+#     ).order_by('-created_at')
+
+#     # Matches where THIS user's lost item was matched
+#     my_matches = Match.objects.filter(
+#         lost_item__reporter=request.user
+#     ).select_related('found_item', 'found_item__reporter').order_by('-created_at')
+
+#     notifications = Notification.objects.filter(
+#         recipient=request.user, is_read=False
+#     ).order_by('-created_at')[:5]
+
+#     context = {
+#         'my_lost_items': my_lost_items,
+#         'my_matches':    my_matches,
+#         'notifications': notifications,
+#     }
+#     return render(request, 'found/owner_dashboard.html', context)
+
+
+# # ─────────────────────────────────────────
+# # FINDER DASHBOARD
+# # ─────────────────────────────────────────
+
+# @login_required
+# def finderDashboardView(request):
+#     if request.user.role != 'Finder':
+#         return redirect('core:home')
+
+#     my_found_items = Item.objects.filter(
+#         reporter=request.user, report_type='Found'
+#     ).order_by('-created_at')
+
+#     # Matches where THIS user's found item was matched
+#     my_matches = Match.objects.filter(
+#         found_item__reporter=request.user
+#     ).select_related('lost_item', 'lost_item__reporter').order_by('-created_at')
+
+#     notifications = Notification.objects.filter(
+#         recipient=request.user, is_read=False
+#     ).order_by('-created_at')[:5]
+
+#     context = {
+#         'my_found_items': my_found_items,
+#         'my_matches':     my_matches,
+#         'notifications':  notifications,
+#     }
+#     return render(request, 'found/finder_dashboard.html', context)
+
+# ─────────────────────────────────────────
+# USER DASHBOARD (Unified)
+# ─────────────────────────────────────────
+
+@login_required
+def userDashboardView(request):
+    # Admins belong in the admin dashboard
+    if request.user.role == 'Admin':
+        return redirect('found:admin_dashboard')
+
+    # Fetch items the user reported as LOST
     my_lost_items = Item.objects.filter(
         reporter=request.user, report_type='Lost'
     ).order_by('-created_at')
 
-    # Matches where THIS user's lost item was matched
-    my_matches = Match.objects.filter(
-        lost_item__reporter=request.user
-    ).select_related('found_item', 'found_item__reporter').order_by('-created_at')
-
-    notifications = Notification.objects.filter(
-        recipient=request.user, is_read=False
-    ).order_by('-created_at')[:5]
-
-    context = {
-        'my_lost_items': my_lost_items,
-        'my_matches':    my_matches,
-        'notifications': notifications,
-    }
-    return render(request, 'found/owner_dashboard.html', context)
-
-
-# ─────────────────────────────────────────
-# FINDER DASHBOARD
-# ─────────────────────────────────────────
-
-@login_required
-def finderDashboardView(request):
-    if request.user.role != 'Finder':
-        return redirect('core:home')
-
+    # Fetch items the user reported as FOUND
     my_found_items = Item.objects.filter(
         reporter=request.user, report_type='Found'
     ).order_by('-created_at')
 
-    # Matches where THIS user's found item was matched
+    # Fetch matches where the user is either the owner OR the finder
     my_matches = Match.objects.filter(
-        found_item__reporter=request.user
-    ).select_related('lost_item', 'lost_item__reporter').order_by('-created_at')
+        Q(lost_item__reporter=request.user) | Q(found_item__reporter=request.user)
+    ).select_related('lost_item', 'found_item').order_by('-created_at')
 
+    # Fetch unread notifications
     notifications = Notification.objects.filter(
         recipient=request.user, is_read=False
     ).order_by('-created_at')[:5]
 
     context = {
+        'my_lost_items':  my_lost_items,
         'my_found_items': my_found_items,
         'my_matches':     my_matches,
         'notifications':  notifications,
     }
-    return render(request, 'found/finder_dashboard.html', context)
+    return render(request, 'found/user_dashboard.html', context)
 
 
 # ─────────────────────────────────────────
@@ -473,4 +515,132 @@ def manageUsersView(request):
         'total_users': User.objects.count(),
         'active_users': User.objects.filter(is_active=True).count(),
         'inactive_users': User.objects.filter(is_active=False).count(),
+    })
+
+
+# ─────────────────────────────────────────
+# RAZORPAY PAYMENT VIEWS
+# ─────────────────────────────────────────
+
+@login_required
+def payment_view(request, match_id):
+    """Initiates the Razorpay order and sends the correct context to the template."""
+    match = get_object_or_404(Match, pk=match_id)
+
+    # 1. Security Check
+    if request.user != match.lost_item.reporter:
+        messages.error(request, "Only the item owner can make this payment.")
+        return redirect('found:user_dashboard')
+
+    # 2. Check if reward exists
+    if not match.lost_item.reward_amount or match.lost_item.reward_amount <= 0:
+        messages.error(request, "No reward amount set for this item.")
+        return redirect('found:user_dashboard')
+
+    # 3. Razorpay Integration
+    amount_in_paise = int(match.lost_item.reward_amount * 100) # Required for API
+    
+    try:
+        # Create official Razorpay Order
+        order_data = {
+            "amount": amount_in_paise,
+            "currency": "INR",
+            "payment_capture": "1" 
+        }
+        razorpay_order = client.order.create(data=order_data)
+
+        context = {
+            'match': match,
+            'finder': match.found_item.reporter,
+            'razorpay_order_id': razorpay_order['id'],
+            'razorpay_merchant_key': settings.RAZORPAY_KEY_ID,
+            'amount': amount_in_paise, 
+        }
+        return render(request, 'core/payment.html', context)
+
+    except Exception as e:
+        messages.error(request, "Payment gateway is currently unavailable.")
+        return redirect('found:user_dashboard')
+
+
+@csrf_exempt
+def process_payment_view(request, match_id):
+    """
+    Verifies the Razorpay signature and updates the Item and Match status 
+    to 'Recovered' once the reward is successfully paid.
+    """
+    if request.method == "POST":
+        # 1. Initialize client with secure settings
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        
+        # 2. Extract parameters sent back by the Razorpay Checkout Modal
+        params_dict = {
+            'razorpay_order_id': request.POST.get('razorpay_order_id'),
+            'razorpay_payment_id': request.POST.get('razorpay_payment_id'),
+            'razorpay_signature': request.POST.get('razorpay_signature')
+        }
+
+        try:
+            # 3. VERIFY SIGNATURE: This ensures the payment is authentic
+            client.utility.verify_payment_signature(params_dict)
+            
+            # 4. DATABASE UPDATES: If verification passes, update Findly data
+            match = get_object_or_404(Match, pk=match_id)
+            
+            # Create a formal Payment record for history
+            from core.models import Payment
+            Payment.objects.create(
+                match=match,
+                payer=request.user,
+                receiver=match.found_item.reporter,
+                amount=match.lost_item.reward_amount,
+                transaction_id=params_dict['razorpay_payment_id'],
+                status='Completed'
+            )
+
+            # Update both items to 'Recovered' status
+            match.lost_item.status = 'Recovered'
+            match.found_item.status = 'Recovered'
+            match.lost_item.save()
+            match.found_item.save()
+
+            # Mark the match itself as Verified/Closed
+            match.match_status = 'Verified'
+            match.save()
+
+            # 5. NOTIFICATION: Alert the Finder that they have been paid
+            from core.utils import send_notification
+            send_notification(
+                match.found_item.reporter,
+                f"💰 Reward Received! You've been paid ₹{match.lost_item.reward_amount} for the {match.lost_item.category}."
+            )
+
+            # 6. REDIRECT: Send user to the professional success page
+            return redirect('found:payment_success', match_id=match_id)
+
+        except Exception as e:
+            # If verification fails or DB error occurs
+            print(f"Payment Verification Failed: {e}")
+            messages.error(request, "We couldn't verify your payment. Please contact support.")
+            return redirect('found:user_dashboard')
+    
+    # If someone tries to access this URL via GET, send them back
+    return redirect('found:user_dashboard')
+
+
+@login_required
+def payment_success_view(request, match_id):
+    """Shows the final confirmation to the user."""
+    match = get_object_or_404(Match, pk=match_id)
+    
+    # Secure access: Only the owner or finder of this match can see this page
+    if request.user != match.lost_item.reporter and request.user != match.found_item.reporter:
+        return redirect('found:user_dashboard')
+
+    from core.models import Payment
+    payment = get_object_or_404(Payment, match=match)
+
+    return render(request, 'core/payment_success.html', {
+        'match': match,
+        'payment': payment,
     })

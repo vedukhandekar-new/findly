@@ -298,10 +298,8 @@ def userSignupView(request):
     if request.user.is_authenticated:
         if request.user.role == "Admin":
             return redirect("found:admin_dashboard")
-        elif request.user.role == "Owner":
-            return redirect("found:owner_dashboard")
-        elif request.user.role == "Finder":
-            return redirect("found:finder_dashboard")
+        else:
+            return redirect("found:user_dashboard")
 
 
     if request.method == "POST":
@@ -332,10 +330,8 @@ def userLoginView(request):
     if request.user.is_authenticated:
         if request.user.role == "Admin":
             return redirect("found:admin_dashboard")
-        elif request.user.role == "Owner":
-            return redirect("found:owner_dashboard")
-        elif request.user.role == "Finder":
-            return redirect("found:finder_dashboard")
+        else:
+            return redirect("found:user_dashboard")
 
     if request.method == "POST":
         form = UserLoginForm(request.POST)
@@ -363,10 +359,8 @@ def userLoginView(request):
             print(f"Logged in: {user.email} | Role: {user.role}")
             if user.role == "Admin":
                 return redirect("found:admin_dashboard")
-            elif user.role == "Owner":
-                return redirect("found:owner_dashboard")
-            elif user.role == "Finder":
-                return redirect("found:finder_dashboard")
+            else:
+                return redirect("found:user_dashboard")
     else:
         form = UserLoginForm()
     return render(request, 'core/login.html', {'form': form})
@@ -403,10 +397,8 @@ def verifyOtpView(request):
             messages.success(request, "Email verified! Welcome to Findly.")
             if user.role == "Admin":
                 return redirect("found:admin_dashboard")
-            elif user.role == "Owner":
-                return redirect("found:owner_dashboard")
-            elif user.role == "Finder":
-                return redirect("found:finder_dashboard")
+            else:
+                return redirect("found:user_dashboard")
         else:
             messages.error(request, "Incorrect OTP. Please try again.")
             return render(request, 'core/verify_otp.html', {'email': email})
@@ -740,34 +732,34 @@ def send_payment_email(match, payment):
 # PAYMENT VIEWS
 # ─────────────────────────────────────────
 
-@login_required
-def payment_view(request, match_id):
-    match = get_object_or_404(Match, pk=match_id)
+# @login_required
+# def payment_view(request, match_id):
+#     match = get_object_or_404(Match, pk=match_id)
 
-    # Only owner of the lost item can pay
-    if request.user != match.lost_item.reporter:
-        messages.error(request, "Only the item owner can make this payment.")
-        return redirect('found:owner_dashboard')
+#     # Only owner of the lost item can pay
+#     if request.user != match.lost_item.reporter:
+#         messages.error(request, "Only the item owner can make this payment.")
+#         return redirect('found:user_dashboard')
 
-    # Redirect if no reward set
-    if not match.lost_item.reward_amount or match.lost_item.reward_amount <= 0:
-        messages.error(request, "No reward amount set for this item.")
-        return redirect('found:owner_dashboard')
+#     # Redirect if no reward set
+#     if not match.lost_item.reward_amount or match.lost_item.reward_amount <= 0:
+#         messages.error(request, "No reward amount set for this item.")
+#         return redirect('found:user_dashboard')
 
-    # Redirect if already paid
-    try:
-        if match.payment.status == 'Completed':
-            messages.info(request, "Reward already paid for this match.")
-            return redirect('core:payment_success', match_id=match_id)
-    except Payment.DoesNotExist:
-        pass
+#     # Redirect if already paid
+#     try:
+#         if match.payment.status == 'Completed':
+#             messages.info(request, "Reward already paid for this match.")
+#             return redirect('core:payment_success', match_id=match_id)
+#     except Payment.DoesNotExist:
+#         pass
 
-    finder = match.found_item.reporter
-    return render(request, 'core/payment.html', {
-        'match'  : match,
-        'amount' : match.lost_item.reward_amount,
-        'finder' : finder,
-    })
+#     finder = match.found_item.reporter
+#     return render(request, 'core/payment.html', {
+#         'match'  : match,
+#         'amount' : match.lost_item.reward_amount,
+#         'finder' : finder,
+#     })
 
 
 @login_required
@@ -780,7 +772,7 @@ def process_payment_view(request, match_id):
     # Security check
     if request.user != match.lost_item.reporter:
         messages.error(request, "Unauthorized payment attempt.")
-        return redirect('found:owner_dashboard')
+        return redirect('found:user_dashboard')
 
     amount = match.lost_item.reward_amount
 
@@ -953,11 +945,7 @@ def resetPasswordView(request):
 def admin_dashboard(request):
     return render(request, 'admin_dashboard.html')
 
-def owner_dashboard(request):
-    return render(request, 'owner_dashboard.html')
 
-def finder_dashboard(request):
-    return render(request, 'finder_dashboard.html')
 def custom_404(request, exception=None):
+    
     return render(request, '404.html', status=404)
-
