@@ -11,5 +11,4 @@ sqlparse==0.5.5
 tzdata==2025.3
 urllib3==2.6.3
 gunicorn
-dj-database-url
-psycopg2-binary
+whitenoise
