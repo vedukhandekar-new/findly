@@ -10,8 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-from pathlib import Path
+import dj_database_url
 import os
+from pathlib import Path
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -76,15 +78,23 @@ WSGI_APPLICATION = 'findly.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'findly',
+#         'USER':'postgres',
+#         'PASSWORD':'vedu1407',
+#         'HOST':'localhost',
+#         'PORT':'5432',
+#     }
+# }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'findly',
-        'USER':'postgres',
-        'PASSWORD':'vedu1407',
-        'HOST':'localhost',
-        'PORT':'5432',
-    }
+    'default': dj_database_url.config(
+        # This looks for the DATABASE_URL variable we just added to Render
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600
+    )
 }
 
 
