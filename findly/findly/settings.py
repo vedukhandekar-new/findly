@@ -122,6 +122,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Tell Django exactly where to look for your CSS files
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
@@ -135,9 +136,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'enter the email address here'
-EMAIL_HOST_PASSWORD = 'enter the password here'
+EMAIL_HOST_USER = 'findlyintern@gmail.com'
+EMAIL_HOST_PASSWORD = 'aaif fchc zasq xmut'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 LOGIN_URL = '/login/'
-RAZORPAY_KEY_ID = 'enter the key id here'
-RAZORPAY_KEY_SECRET = 'enter the key secret here'
+RAZORPAY_KEY_ID = ''
+RAZORPAY_KEY_SECRET = ''

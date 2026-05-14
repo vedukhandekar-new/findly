@@ -10,7 +10,7 @@ from .models import User, Item, Message, Review
 class UserSignupForm(UserCreationForm):
     class Meta:
         model  = User
-        fields = ['first_name', 'last_name', 'gender', 'mobile', 'email', 'role', 'password1', 'password2']
+        fields = ['first_name', 'last_name', 'gender', 'mobile', 'email', 'password1', 'password2']
         widgets = {
             'password1': forms.PasswordInput(),
             'password2': forms.PasswordInput(),

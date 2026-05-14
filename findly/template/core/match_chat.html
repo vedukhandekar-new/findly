@@ -21,13 +21,13 @@
 {% elif request.user.role == 'Finder' %}
     {% include 'navbar_finder.html' %}
 {% else %}
-    {% include 'navbar_owner.html' %}
+    {% include 'navbar_user.html' %}
 {% endif %}
 
 <main class="max-w-3xl mx-auto px-4 sm:px-6 py-8">
 
     <!-- Back -->
-    <a href="{% if request.user.role == 'Owner' %}{% url 'found:owner_dashboard' %}{% else %}{% url 'found:finder_dashboard' %}{% endif %}"
+    <a href="{% if request.user.role == 'Owner' %}{% url 'found:user_dashboard' %}{% else %}{% url 'found:finder_dashboard' %}{% endif %}"
         class="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-6">
         <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
     </a>
