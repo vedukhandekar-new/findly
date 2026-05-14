@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-pl$_1!wmq)!m%h=8t($f!=)7=07a=#bbm(*ej904kak(+um2+q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['findly-euzv.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
