@@ -292,8 +292,32 @@ def send_otp_email(user, otp):
 #          redirect to LOGIN (not verify)
 # ─────────────────────────────────────────
 
-def userSignupView(request):
+# def userSignupView(request):
 
+#     # Redirect if already logged in
+#     if request.user.is_authenticated:
+#         if request.user.role == "Admin":
+#             return redirect("found:admin_dashboard")
+#         else:
+#             return redirect("found:user_dashboard")
+
+
+#     if request.method == "POST":
+#         form = UserSignupForm(request.POST)
+#         if form.is_valid():
+#             user = form.save(commit=False)
+#             user.is_active = False  # inactive until OTP verified on login
+#             user.save()
+#             send_welcome_email(user)
+#             messages.success(request, f"Account created! Please log in to verify your email.")
+#             return redirect('core:login')
+#         else:
+#             print("SIGNUP ERRORS:", form.errors)
+#             return render(request, 'core/signup.html', {'form': form})
+#     else:
+#         form = UserSignupForm()
+#         return render(request, 'core/signup.html', {'form': form})
+def userSignupView(request):
     # Redirect if already logged in
     if request.user.is_authenticated:
         if request.user.role == "Admin":
@@ -301,23 +325,44 @@ def userSignupView(request):
         else:
             return redirect("found:user_dashboard")
 
-
     if request.method == "POST":
         form = UserSignupForm(request.POST)
         if form.is_valid():
+            # 1. Save user but keep them inactive
             user = form.save(commit=False)
-            user.is_active = False  # inactive until OTP verified on login
+            user.is_active = False  
+            
+            # 2. Generate 6-digit OTP right at signup
+            otp = str(random.randint(100000, 999999))
+            user.otp_code = otp
+            user.otp_created_at = timezone.now()
             user.save()
-            send_welcome_email(user)
-            messages.success(request, f"Account created! Please log in to verify your email.")
-            return redirect('core:login')
+            
+            # 3. Try Sending the OTP Email
+            try:
+                # Send the OTP instead of the Welcome Email
+                send_otp_email(user, otp)
+                
+                # Store email in session so the verify page knows who is verifying
+                request.session['verify_email'] = user.email
+                
+                messages.success(request, f"Account created! OTP sent to {user.email}. Please verify your email.")
+                
+                # 4. REDIRECT DIRECTLY TO OTP PAGE
+                return redirect('core:verify_otp')
+                
+            except Exception as e:
+                # 5. ERROR HANDLING: Rollback and Log
+                print(f"SMTP Error during signup: {e}")
+                user.delete() # Deletes the inactive user so they can try signing up again
+                messages.error(request, "Failed to send OTP email. Please check your email configuration.")
+                return render(request, 'core/signup.html', {'form': form})
         else:
             print("SIGNUP ERRORS:", form.errors)
             return render(request, 'core/signup.html', {'form': form})
     else:
         form = UserSignupForm()
         return render(request, 'core/signup.html', {'form': form})
-
 
 # ─────────────────────────────────────────
 # LOGIN — if inactive, send OTP and
