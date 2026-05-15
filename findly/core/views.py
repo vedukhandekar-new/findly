@@ -326,16 +326,13 @@ def userSignupView(request):
         form = UserSignupForm(request.POST)
         if form.is_valid():
             try:
-                # 1. Create the user but don't save yet
                 user = form.save(commit=False)
-                user.is_active = False  # Keep inactive until OTP
+                user.is_active = False 
                 
-                # 2. Generate and save OTP
                 otp = str(random.randint(100000, 999999))
                 user.otp_code = otp
                 user.save()
                 
-                # 3. Try to send mail
                 try:
                     send_mail(
                         'Your Findly OTP',
@@ -346,23 +343,26 @@ def userSignupView(request):
                     )
                     request.session['verify_email'] = user.email
                     messages.success(request, "OTP sent to your email!")
-                    return redirect('verify_otp') # Use the name without 'core:'
+                    return redirect('verify_otp')
                 
                 except Exception as email_err:
                     logger.error(f"Email Failed: {email_err}")
-                    user.delete() # Clean up the database
+                    user.delete()
                     messages.error(request, f"Email error: {str(email_err)}")
-                    return render(request, 'signup.html', {'form': form})
+                    # FIX: Match the path used at the bottom
+                    return render(request, 'core/signup.html', {'form': form})
 
             except Exception as db_err:
                 logger.error(f"Database Error: {db_err}")
-                messages.error(request, "A database error occurred. Please try again.")
-                return render(request, 'signup.html', {'form': form})
+                messages.error(request, "A database error occurred.")
+                # FIX: Match the path used at the bottom
+                return render(request, 'core/signup.html', {'form': form})
         else:
             messages.error(request, "Invalid form data.")
     else:
         form = UserSignupForm()
     
+    # This is your "Main" return
     return render(request, 'core/signup.html', {'form': form})
 # ─────────────────────────────────────────
 # LOGIN — if inactive, send OTP and
