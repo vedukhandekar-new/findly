@@ -11,6 +11,10 @@ from math import radians, cos, sin, asin, sqrt
 import os
 import random
 
+import logging
+from django.core.mail import send_mail
+from .models import User
+
 from .forms import (
     UserSignupForm, UserLoginForm, UserProfileForm,
     ReportLostItemForm, ReportFoundItemForm, ItemSearchForm,
@@ -18,7 +22,7 @@ from .forms import (
 )
 from .models import User, Item, Match, Message, Notification, Review, Payment
 from .utils import run_matching_algorithm, send_notification
-
+logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────
 # WELCOME EMAIL — sent on signup, no OTP
@@ -318,52 +322,55 @@ def send_otp_email(user, otp):
 #         form = UserSignupForm()
 #         return render(request, 'core/signup.html', {'form': form})
 def userSignupView(request):
-    # Redirect if already logged in
     if request.user.is_authenticated:
-        if request.user.role == "Admin":
-            return redirect("found:admin_dashboard")
-        else:
-            return redirect("found:user_dashboard")
+        return redirect("core:home") # Redirect if already logged in
 
     if request.method == "POST":
         form = UserSignupForm(request.POST)
         if form.is_valid():
-            # 1. Save user but keep them inactive
+            # 1. Save user to DB but keep them inactive
             user = form.save(commit=False)
             user.is_active = False  
             
-            # 2. Generate 6-digit OTP right at signup
+            # 2. Generate 6-digit OTP
             otp = str(random.randint(100000, 999999))
             user.otp_code = otp
-            user.otp_created_at = timezone.now()
             user.save()
             
-            # 3. Try Sending the OTP Email
+            # 3. Safely Try Sending the Email
             try:
-                # Send the OTP instead of the Welcome Email
-                send_otp_email(user, otp)
+                subject = 'Verify your Findly Account'
+                message = f'Hi {user.first_name},\n\nYour verification OTP is: {otp}'
+                email_from = settings.EMAIL_HOST_USER
+                recipient_list = [user.email]
                 
-                # Store email in session so the verify page knows who is verifying
+                send_mail(subject, message, email_from, recipient_list, fail_silently=False)
+                
+                # Store email in session to identify user on the next page
                 request.session['verify_email'] = user.email
                 
-                messages.success(request, f"Account created! OTP sent to {user.email}. Please verify your email.")
+                messages.success(request, f"Account created! OTP sent to {user.email}.")
                 
-                # 4. REDIRECT DIRECTLY TO OTP PAGE
+                # 4. Redirect on success
                 return redirect('core:verify_otp')
                 
             except Exception as e:
-                # 5. ERROR HANDLING: Rollback and Log
-                print(f"SMTP Error during signup: {e}")
-                user.delete() # Deletes the inactive user so they can try signing up again
-                messages.error(request, "Failed to send OTP email. Please check your email configuration.")
+                # 5. The Critical Fix: Handle the Crash
+                logger.error(f"SMTP Error during signup for {user.email}: {str(e)}")
+                
+                # Rollback: Delete the inactive user so they aren't stuck in limbo
+                user.delete() 
+                
+                # Send exact error to frontend
+                messages.error(request, "Server failed to send the OTP email. Please verify our email configuration or try again later.")
                 return render(request, 'core/signup.html', {'form': form})
         else:
-            print("SIGNUP ERRORS:", form.errors)
+            # Form validation failed (e.g., email already exists)
             return render(request, 'core/signup.html', {'form': form})
-    else:
-        form = UserSignupForm()
-        return render(request, 'core/signup.html', {'form': form})
-
+            
+    # GET request
+    form = UserSignupForm()
+    return render(request, 'core/signup.html', {'form': form})
 # ─────────────────────────────────────────
 # LOGIN — if inactive, send OTP and
 #         redirect to verify page
@@ -415,40 +422,69 @@ def userLoginView(request):
 # VERIFY OTP
 # ─────────────────────────────────────────
 
-def verifyOtpView(request):
+# def verifyOtpView(request):
+#     email = request.session.get('verify_email')
+#     if not email:
+#         return redirect('core:login')
+#     if request.method == "POST":
+#         otp_entered = request.POST.get('otp', '').strip()
+#         try:
+#             user = User.objects.get(email=email)
+#         except User.DoesNotExist:
+#             messages.error(request, "User not found.")
+#             return redirect('core:login')
+#         if user.otp_created_at:
+#             expiry = user.otp_created_at + timezone.timedelta(minutes=10)
+#             if timezone.now() > expiry:
+#                 messages.error(request, "OTP expired. Please log in again.")
+#                 return redirect('core:login')
+#         if otp_entered == user.otp_code:
+#             user.is_active = True
+#             user.otp_code = None
+#             user.otp_created_at = None
+#             user.save()
+#             if 'verify_email' in request.session:
+#                 del request.session['verify_email']
+#             login(request, user)
+#             messages.success(request, "Email verified! Welcome to Findly.")
+#             if user.role == "Admin":
+#                 return redirect("found:admin_dashboard")
+#             else:
+#                 return redirect("found:user_dashboard")
+#         else:
+#             messages.error(request, "Incorrect OTP. Please try again.")
+#             return render(request, 'core/verify_otp.html', {'email': email})
+#     return render(request, 'core/verify_otp.html', {'email': email})
+def verify_otp_view(request):
     email = request.session.get('verify_email')
+    
     if not email:
-        return redirect('core:login')
-    if request.method == "POST":
-        otp_entered = request.POST.get('otp', '').strip()
+        messages.error(request, 'Session expired or invalid access. Please sign up again.')
+        return redirect('core:signup')
+
+    if request.method == 'POST':
+        user_entered_otp = request.POST.get('otp')
+        
         try:
             user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            messages.error(request, "User not found.")
-            return redirect('core:login')
-        if user.otp_created_at:
-            expiry = user.otp_created_at + timezone.timedelta(minutes=10)
-            if timezone.now() > expiry:
-                messages.error(request, "OTP expired. Please log in again.")
+            
+            # 6. Verify and Activate
+            if user.otp_code == user_entered_otp:
+                user.is_active = True 
+                user.otp_code = "" # Clear OTP for security
+                user.save()
+                
+                del request.session['verify_email'] # Clear session
+                
+                messages.success(request, 'Account verified successfully! You can now log in.')
                 return redirect('core:login')
-        if otp_entered == user.otp_code:
-            user.is_active = True
-            user.otp_code = None
-            user.otp_created_at = None
-            user.save()
-            if 'verify_email' in request.session:
-                del request.session['verify_email']
-            login(request, user)
-            messages.success(request, "Email verified! Welcome to Findly.")
-            if user.role == "Admin":
-                return redirect("found:admin_dashboard")
             else:
-                return redirect("found:user_dashboard")
-        else:
-            messages.error(request, "Incorrect OTP. Please try again.")
-            return render(request, 'core/verify_otp.html', {'email': email})
-    return render(request, 'core/verify_otp.html', {'email': email})
+                messages.error(request, 'Invalid OTP. Please check your email and try again.')
+        except User.DoesNotExist:
+            messages.error(request, 'Critical Error: User record not found.')
+            return redirect('core:signup')
 
+    return render(request, 'core/verify_otp.html', {'email': email})
 
 # ─────────────────────────────────────────
 # RESEND OTP
