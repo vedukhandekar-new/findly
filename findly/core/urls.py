@@ -11,7 +11,7 @@ urlpatterns = [
     path('',            views.home_view,       name='home'),
 
     # ── OTP Verify ────────────────────────────────────────
-    path('verify-otp/', views.verifyOtpView,   name='verify_otp'),
+    path('verify-otp/', views.verify_otp_view,   name='verify_otp'),
     path('resend-otp/', views.resendOtpView,   name='resend_otp'),
 
     # ── Forgot Password ───────────────────────────────────
