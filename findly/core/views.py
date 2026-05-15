@@ -363,7 +363,7 @@ def userSignupView(request):
     else:
         form = UserSignupForm()
     
-    return render(request, 'signup.html', {'form': form})
+    return render(request, 'core/signup.html', {'form': form})
 # ─────────────────────────────────────────
 # LOGIN — if inactive, send OTP and
 #         redirect to verify page
