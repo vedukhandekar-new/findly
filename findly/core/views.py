@@ -323,53 +323,49 @@ def send_otp_email(user, otp):
 #         return render(request, 'core/signup.html', {'form': form})
 def userSignupView(request):
     if request.user.is_authenticated:
-        return redirect("core:home") # Redirect if already logged in
+        return redirect("core:home")
 
     if request.method == "POST":
         form = UserSignupForm(request.POST)
         if form.is_valid():
-            # 1. Save user to DB but keep them inactive
+            # 1. Save user to DB but keep them inactive (is_active=False)
             user = form.save(commit=False)
-            user.is_active = False  
+            user.is_active = False 
             
-            # 2. Generate 6-digit OTP
+            # 2. Generate a 6-digit OTP
             otp = str(random.randint(100000, 999999))
             user.otp_code = otp
             user.save()
             
-            # 3. Safely Try Sending the Email
+            # 3. Attempt to send the OTP email
             try:
                 subject = 'Verify your Findly Account'
                 message = f'Hi {user.first_name},\n\nYour verification OTP is: {otp}'
                 email_from = settings.EMAIL_HOST_USER
                 recipient_list = [user.email]
                 
+                # We use fail_silently=False so our 'except' block can catch errors
                 send_mail(subject, message, email_from, recipient_list, fail_silently=False)
                 
-                # Store email in session to identify user on the next page
+                # Store email in session to find the user on the verification page
                 request.session['verify_email'] = user.email
                 
                 messages.success(request, f"Account created! OTP sent to {user.email}.")
-                
-                # 4. Redirect on success
                 return redirect('core:verify_otp')
                 
             except Exception as e:
-                # 5. The Critical Fix: Handle the Crash
-                logger.error(f"SMTP Error during signup for {user.email}: {str(e)}")
-                
-                # Rollback: Delete the inactive user so they aren't stuck in limbo
+                # 4. The Safety Net: If email fails, don't leave a broken user in the DB
+                logger.error(f"Critical SMTP Error: {str(e)}")
                 user.delete() 
                 
-                # Send exact error to frontend
-                messages.error(request, "Server failed to send the OTP email. Please verify our email configuration or try again later.")
+                messages.error(request, "Failed to send OTP email. This is usually due to server connection issues. Please try again.")
                 return render(request, 'core/signup.html', {'form': form})
         else:
-            # Form validation failed (e.g., email already exists)
-            return render(request, 'core/signup.html', {'form': form})
+            messages.error(request, "Please correct the errors below.")
             
-    # GET request
-    form = UserSignupForm()
+    else:
+        form = UserSignupForm()
+        
     return render(request, 'core/signup.html', {'form': form})
 # ─────────────────────────────────────────
 # LOGIN — if inactive, send OTP and
