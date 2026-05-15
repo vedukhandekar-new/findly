@@ -31,43 +31,91 @@ class UserManager(BaseUserManager):
 # USER MODEL  (your original — bug fixed)
 # ─────────────────────────────────────────
 
-class User(AbstractBaseUser):
+# class User(AbstractBaseUser):
 
-    ROLE_CHOICES = (
-        ('Admin',  'Admin'),
-        ('User',  'User'),
+#     ROLE_CHOICES = (
+#         ('Admin',  'Admin'),
+#         ('User',  'User'),
         
+#     )
+#     GENDER_CHOICES = (
+#         ('Male',   'Male'),
+#         ('Female', 'Female'),
+#         ('Other',  'Other'),
+#     )
+
+#     email      = models.EmailField(unique=True)
+#     first_name = models.CharField(max_length=20, null=True, blank=True)
+#     last_name  = models.CharField(max_length=20, null=True, blank=True)
+#     gender     = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
+#     # ✅ FIX: BigIntegerField does NOT accept max_length — use CharField instead
+#     mobile     = models.CharField(max_length=15, null=True, blank=True)
+#     role       = models.CharField(max_length=20, choices=ROLE_CHOICES, default='User')
+
+#     rating_score = models.DecimalField(max_digits=3, decimal_places=2, default=5.00)
+#     otp_code       = models.CharField(max_length=6, null=True, blank=True)
+#     otp_created_at = models.DateTimeField(null=True, blank=True)
+#     is_active      = models.BooleanField(default=False)  # ← change True to False
+#     profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+
+#     is_active  = models.BooleanField(default=True)
+#     is_staff   = models.BooleanField(default=False)
+#     is_admin   = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     reward_amount   = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     objects = UserManager()
+
+#     USERNAME_FIELD  = 'email'
+#     REQUIRED_FIELDS = []
+
+#     def has_perm(self, perm, obj=None):
+#         return self.is_admin
+
+#     def has_module_perms(self, app_label):
+#         return self.is_admin
+
+#     def __str__(self):
+#         return self.email
+
+class User(AbstractBaseUser):
+    ROLE_CHOICES = (
+        ('Admin', 'Admin'),
+        ('User', 'User'),
     )
     GENDER_CHOICES = (
-        ('Male',   'Male'),
+        ('Male', 'Male'),
         ('Female', 'Female'),
-        ('Other',  'Other'),
+        ('Other', 'Other'),
     )
 
-    email      = models.EmailField(unique=True)
+    email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=20, null=True, blank=True)
-    last_name  = models.CharField(max_length=20, null=True, blank=True)
-    gender     = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
-    # ✅ FIX: BigIntegerField does NOT accept max_length — use CharField instead
-    mobile     = models.CharField(max_length=15, null=True, blank=True)
-    role       = models.CharField(max_length=20, choices=ROLE_CHOICES, default='User')
+    last_name = models.CharField(max_length=20, null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
+    mobile = models.CharField(max_length=15, null=True, blank=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='User')
 
     rating_score = models.DecimalField(max_digits=3, decimal_places=2, default=5.00)
-    otp_code       = models.CharField(max_length=6, null=True, blank=True)
-    otp_created_at = models.DateTimeField(null=True, blank=True)
-    is_active      = models.BooleanField(default=False)  # ← change True to False
     profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+    reward_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
 
-    is_active  = models.BooleanField(default=True)
-    is_staff   = models.BooleanField(default=False)
-    is_admin   = models.BooleanField(default=False)
+    # OTP Fields
+    otp_code = models.CharField(max_length=6, null=True, blank=True)
+    otp_created_at = models.DateTimeField(null=True, blank=True)
+
+    # Permissions & Status
+    is_active = models.BooleanField(default=False)  # User stays inactive until OTP is verified
+    is_staff = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
+    
     created_at = models.DateTimeField(auto_now_add=True)
-    reward_amount   = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
 
-    USERNAME_FIELD  = 'email'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
     def has_perm(self, perm, obj=None):

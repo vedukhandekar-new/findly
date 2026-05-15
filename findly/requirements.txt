@@ -14,3 +14,4 @@ gunicorn
 whitenoise
 dj-database-url
 python-dotenv>=1.0.0
+pip freeze > requirements.txt

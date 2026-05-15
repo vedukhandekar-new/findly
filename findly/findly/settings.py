@@ -94,9 +94,10 @@ WSGI_APPLICATION = 'findly.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        # This looks for the DATABASE_URL variable we just added to Render
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600
+        # This is the fallback for your laptop
+        default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}',
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
 
