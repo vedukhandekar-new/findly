@@ -69,11 +69,13 @@
             <form method="POST" action="{% url 'core:signup' %}" class="space-y-6">
                 {% csrf_token %}
 
-                {% if error %}
-                    <div class="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm flex items-center gap-3 font-medium animate-fade-in-up">
-                        <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0"></i>
-                        {{ error }}
-                    </div>
+                {% if messages %}
+                    {% for msg in messages %}
+                        <div class="{% if msg.tags == 'error' %}bg-red-500/10 border border-red-500/20 text-red-400{% else %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% endif %} px-4 py-3 rounded-lg text-sm flex items-center gap-3 font-medium animate-fade-in-up">
+                            <i data-lucide="{% if msg.tags == 'error' %}alert-circle{% else %}check-circle{% endif %}" class="w-5 h-5 flex-shrink-0"></i>
+                            {{ msg }}
+                        </div>
+                    {% endfor %}
                 {% endif %}
 
                 {% comment %} <!-- VISUAL ROLE SELECTOR (Replaces Dropdown) -->

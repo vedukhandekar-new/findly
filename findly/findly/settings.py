@@ -148,6 +148,15 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 AUTH_USER_MODEL = 'core.User'
+
+# ADD THIS — without it, login() crashes with custom user model
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# ADD THIS — suppresses Django warnings about default ID field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -160,5 +169,8 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 LOGIN_URL = '/login/'
+# ADD THIS — session expires in 10 minutes, matching OTP lifetime
+SESSION_COOKIE_AGE = 600
+SESSION_SAVE_EVERY_REQUEST = True
 RAZORPAY_KEY_ID = ''
 RAZORPAY_KEY_SECRET = ''

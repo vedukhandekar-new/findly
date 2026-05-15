@@ -343,7 +343,7 @@ def userSignupView(request):
                     )
                     request.session['verify_email'] = user.email
                     messages.success(request, "OTP sent to your email!")
-                    return redirect('verify_otp')
+                    return redirect('core:verify_otp')
                 
                 except Exception as email_err:
                     logger.error(f"Email Failed: {email_err}")
@@ -400,7 +400,7 @@ def userLoginView(request):
                 messages.success(request, f"OTP sent to {user.email}. Please verify your email.")
                 return redirect('core:verify_otp')
             # Already verified — log in directly
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             print(f"Logged in: {user.email} | Role: {user.role}")
             if user.role == "Admin":
                 return redirect("found:admin_dashboard")
@@ -448,31 +448,52 @@ def userLoginView(request):
 #             messages.error(request, "Incorrect OTP. Please try again.")
 #             return render(request, 'core/verify_otp.html', {'email': email})
 #     return render(request, 'core/verify_otp.html', {'email': email})
-def verify_otp_view(request):
+def verify_otp(request):
     email = request.session.get('verify_email')
-    
+
     if not email:
         messages.error(request, 'Session expired or invalid access. Please sign up again.')
         return redirect('core:signup')
 
     if request.method == 'POST':
         user_entered_otp = request.POST.get('otp')
-        
+
         try:
             user = User.objects.get(email=email)
-            
-            # 6. Verify and Activate
+
+            # FIX 1: Add OTP expiry check — was completely missing before
+            if user.otp_created_at:
+                expiry = user.otp_created_at + timezone.timedelta(minutes=10)
+                if timezone.now() > expiry:
+                    messages.error(request, 'OTP has expired. Please sign up again.')
+                    user.delete()
+                    del request.session['verify_email']
+                    return redirect('core:signup')
+
             if user.otp_code == user_entered_otp:
-                user.is_active = True 
-                user.otp_code = "" # Clear OTP for security
+                user.is_active = True
+                user.otp_code = None
+                user.otp_created_at = None
                 user.save()
-                
-                del request.session['verify_email'] # Clear session
-                
-                messages.success(request, 'Account verified successfully! You can now log in.')
-                return redirect('core:login')
+
+                del request.session['verify_email']
+
+                # FIX 2: Specify backend — without this login() crashes
+                # with "ValueError: must have exactly one backend"
+                login(request, user,
+                      backend='django.contrib.auth.backends.ModelBackend')
+
+                messages.success(request, 'Account verified successfully! Welcome to Findly.')
+
+                # FIX 3: Redirect based on role, not just to login
+                if user.role == 'Admin':
+                    return redirect('found:admin_dashboard')
+                else:
+                    return redirect('found:user_dashboard')
+
             else:
                 messages.error(request, 'Invalid OTP. Please check your email and try again.')
+
         except User.DoesNotExist:
             messages.error(request, 'Critical Error: User record not found.')
             return redirect('core:signup')

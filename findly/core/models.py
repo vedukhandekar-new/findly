@@ -124,6 +124,26 @@ class User(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return self.is_admin
 
+    def generate_otp(self):
+        import random, string
+        from django.utils import timezone
+        self.otp_code       = ''.join(random.choices(string.digits, k=6))
+        self.otp_created_at = timezone.now()
+        self.save(update_fields=['otp_code', 'otp_created_at'])
+        return self.otp_code
+
+    def is_otp_valid(self):
+        from django.utils import timezone
+        if not self.otp_created_at:
+            return False
+        return timezone.now() < self.otp_created_at + timezone.timedelta(minutes=10)
+
+    def clear_otp(self):
+        self.otp_code       = None
+        self.otp_created_at = None
+        self.save(update_fields=['otp_code', 'otp_created_at'])
+
+
     def __str__(self):
         return self.email
 
