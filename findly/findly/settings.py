@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # settings.py
 SECRET_KEY = os.environ.get('SECRET_KEY', 'optional-fallback-key-for-local-only')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['findly-euzv.onrender.com', 'localhost', '127.0.0.1']
 

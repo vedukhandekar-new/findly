@@ -322,51 +322,48 @@ def send_otp_email(user, otp):
 #         form = UserSignupForm()
 #         return render(request, 'core/signup.html', {'form': form})
 def userSignupView(request):
-    if request.user.is_authenticated:
-        return redirect("core:home")
-
     if request.method == "POST":
         form = UserSignupForm(request.POST)
         if form.is_valid():
-            # 1. Save user to DB but keep them inactive (is_active=False)
-            user = form.save(commit=False)
-            user.is_active = False 
-            
-            # 2. Generate a 6-digit OTP
-            otp = str(random.randint(100000, 999999))
-            user.otp_code = otp
-            user.save()
-            
-            # 3. Attempt to send the OTP email
             try:
-                subject = 'Verify your Findly Account'
-                message = f'Hi {user.first_name},\n\nYour verification OTP is: {otp}'
-                email_from = settings.EMAIL_HOST_USER
-                recipient_list = [user.email]
+                # 1. Create the user but don't save yet
+                user = form.save(commit=False)
+                user.is_active = False  # Keep inactive until OTP
                 
-                # We use fail_silently=False so our 'except' block can catch errors
-                send_mail(subject, message, email_from, recipient_list, fail_silently=False)
+                # 2. Generate and save OTP
+                otp = str(random.randint(100000, 999999))
+                user.otp_code = otp
+                user.save()
                 
-                # Store email in session to find the user on the verification page
-                request.session['verify_email'] = user.email
+                # 3. Try to send mail
+                try:
+                    send_mail(
+                        'Your Findly OTP',
+                        f'Your verification code is: {otp}',
+                        settings.EMAIL_HOST_USER,
+                        [user.email],
+                        fail_silently=False,
+                    )
+                    request.session['verify_email'] = user.email
+                    messages.success(request, "OTP sent to your email!")
+                    return redirect('verify_otp') # Use the name without 'core:'
                 
-                messages.success(request, f"Account created! OTP sent to {user.email}.")
-                return redirect('core:verify_otp')
-                
-            except Exception as e:
-                # 4. The Safety Net: If email fails, don't leave a broken user in the DB
-                logger.error(f"Critical SMTP Error: {str(e)}")
-                user.delete() 
-                
-                messages.error(request, "Failed to send OTP email. This is usually due to server connection issues. Please try again.")
-                return render(request, 'core/signup.html', {'form': form})
+                except Exception as email_err:
+                    logger.error(f"Email Failed: {email_err}")
+                    user.delete() # Clean up the database
+                    messages.error(request, f"Email error: {str(email_err)}")
+                    return render(request, 'signup.html', {'form': form})
+
+            except Exception as db_err:
+                logger.error(f"Database Error: {db_err}")
+                messages.error(request, "A database error occurred. Please try again.")
+                return render(request, 'signup.html', {'form': form})
         else:
-            messages.error(request, "Please correct the errors below.")
-            
+            messages.error(request, "Invalid form data.")
     else:
         form = UserSignupForm()
-        
-    return render(request, 'core/signup.html', {'form': form})
+    
+    return render(request, 'signup.html', {'form': form})
 # ─────────────────────────────────────────
 # LOGIN — if inactive, send OTP and
 #         redirect to verify page
