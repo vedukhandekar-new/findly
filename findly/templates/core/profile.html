@@ -21,7 +21,7 @@
 {% elif request.user.role == 'Finder' %}
     {% include 'navbar_finder.html' %}
 {% else %}
-    {% include 'navbar_owner.html' %}
+    {% include 'navbar_user.html' %}
 {% endif %}
 
 <main class="max-w-2xl mx-auto px-4 sm:px-6 py-10">
