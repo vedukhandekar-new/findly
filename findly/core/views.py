@@ -416,7 +416,7 @@ def userLoginView(request):
                 user.otp_code = otp
                 user.otp_created_at = timezone.now()
                 user.save()
-                send_otp_email(user, otp)
+                send_otp_via_brevo_api(user.email, otp)
                 request.session['verify_email'] = user.email
                 messages.success(request, f"OTP sent to {user.email}. Please verify your email.")
                 return redirect('core:verify_otp')
@@ -535,7 +535,7 @@ def resendOtpView(request):
         user.otp_code = otp
         user.otp_created_at = timezone.now()
         user.save()
-        send_otp_email(user, otp)
+        send_otp_via_brevo_api(user.email, otp)
         messages.success(request, "New OTP sent to your email!")
     except Exception as e:
         messages.error(request, f"Failed to resend OTP: {e}")
