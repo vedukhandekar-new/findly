@@ -304,7 +304,7 @@ def send_otp_via_brevo_api(to_email, otp_code):
     
     send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
         to=[{"email": to_email}],
-        sender={"email": settings.EMAIL_HOST_USER, "name": "Findly"},
+        sender={"email": os.environ.get('DEFAULT_FROM_EMAIL'), "name": "Findly"},
         subject="Your Findly OTP",
         text_content=f"Your verification code is: {otp_code}\n\nExpires in 10 minutes."
     )
