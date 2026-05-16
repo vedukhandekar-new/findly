@@ -377,7 +377,9 @@ def userSignupView(request):
                 # FIX: Match the path used at the bottom
                 return render(request, 'core/signup.html', {'form': form})
         else:
-            messages.error(request, "Invalid form data.")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = UserSignupForm()
     
