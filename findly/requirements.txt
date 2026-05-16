@@ -6,3 +6,4 @@ python-dotenv
 whitenoise
 razorpay
 Pillow
+sib-api-v3-sdk

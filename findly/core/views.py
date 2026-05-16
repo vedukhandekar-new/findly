@@ -291,6 +291,32 @@ def send_otp_email(user, otp):
         print(f"OTP email failed: {e}")
 
 
+def send_otp_via_brevo_api(to_email, otp_code):
+    import sib_api_v3_sdk
+    from sib_api_v3_sdk.rest import ApiException
+    
+    configuration = sib_api_v3_sdk.Configuration()
+    configuration.api_key['api-key'] = os.environ.get('BREVO_API_KEY')
+    
+    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
+        sib_api_v3_sdk.ApiClient(configuration)
+    )
+    
+    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+        to=[{"email": to_email}],
+        sender={"email": settings.EMAIL_HOST_USER, "name": "Findly"},
+        subject="Your Findly OTP",
+        text_content=f"Your verification code is: {otp_code}\n\nExpires in 10 minutes."
+    )
+    
+    try:
+        api_instance.send_transac_email(send_smtp_email)
+        print(f"OTP sent via Brevo API to {to_email}")
+        return True
+    except ApiException as e:
+        print(f"Brevo API error: {e}")
+        raise Exception(f"Brevo API error: {e}")
+
 # ─────────────────────────────────────────
 # SIGNUP — save user, send welcome email,
 #          redirect to LOGIN (not verify)
@@ -334,22 +360,15 @@ def userSignupView(request):
                 user.save()
                 
                 try:
-                    send_mail(
-                        'Your Findly OTP',
-                        f'Your verification code is: {otp}',
-                        settings.EMAIL_HOST_USER,
-                        [user.email],
-                        fail_silently=False,
-                    )
+                    send_otp_via_brevo_api(user.email, otp)
                     request.session['verify_email'] = user.email
                     messages.success(request, "OTP sent to your email!")
                     return redirect('core:verify_otp')
-                
+
                 except Exception as email_err:
-                    logger.error(f"Email Failed: {email_err}")
+                    logger.error(f"Brevo API Failed: {email_err}")
                     user.delete()
                     messages.error(request, f"Email error: {str(email_err)}")
-                    # FIX: Match the path used at the bottom
                     return render(request, 'core/signup.html', {'form': form})
 
             except Exception as db_err:
