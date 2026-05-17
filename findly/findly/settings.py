@@ -182,5 +182,5 @@ LOGIN_URL = '/login/'
 # ADD THIS — session expires in 10 minutes, matching OTP lifetime
 SESSION_COOKIE_AGE = 600
 SESSION_SAVE_EVERY_REQUEST = True
-RAZORPAY_KEY_ID = ''
-RAZORPAY_KEY_SECRET = ''
+RAZORPAY_KEY_ID     = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')

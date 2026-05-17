@@ -71,7 +71,8 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         console.log("Findly Payment Script Loaded"); // Check if this shows in Console
-        
+        console.log("Razorpay Key:", "{{ razorpay_merchant_key }}");
+
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
         var options = {
