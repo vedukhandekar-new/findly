@@ -8,9 +8,14 @@ from django.conf import settings
 from django.db.models import Q
 import razorpay
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 
 # found/views.py
-client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+def get_razorpay_client():
+    if not settings.RAZORPAY_KEY_ID or not settings.RAZORPAY_KEY_SECRET:
+        return None
+    import razorpay
+    return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 def send_recovery_email_owner(match):
     user   = match.lost_item.reporter
@@ -522,46 +527,84 @@ def manageUsersView(request):
 # RAZORPAY PAYMENT VIEWS
 # ─────────────────────────────────────────
 
+# @login_required
+# def payment_view(request, match_id):
+#     """Initiates the Razorpay order and sends the correct context to the template."""
+#     match = get_object_or_404(Match, pk=match_id)
+
+#     # 1. Security Check
+#     if request.user != match.lost_item.reporter:
+#         messages.error(request, "Only the item owner can make this payment.")
+#         return redirect('found:user_dashboard')
+
+#     # 2. Check if reward exists
+#     if not match.lost_item.reward_amount or match.lost_item.reward_amount <= 0:
+#         messages.error(request, "No reward amount set for this item.")
+#         return redirect('found:user_dashboard')
+
+#     # 3. Razorpay Integration
+#     amount_in_paise = int(match.lost_item.reward_amount * 100) # Required for API
+    
+#     try:
+#         # Create official Razorpay Order
+#         order_data = {
+#             "amount": amount_in_paise,
+#             "currency": "INR",
+#             "payment_capture": "1" 
+#         }
+#         razorpay_order = client.order.create(data=order_data)
+
+#         context = {
+#             'match': match,
+#             'finder': match.found_item.reporter,
+#             'razorpay_order_id': razorpay_order['id'],
+#             'razorpay_merchant_key': settings.RAZORPAY_KEY_ID,
+#             'amount': amount_in_paise, 
+#         }
+#         return render(request, 'core/payment.html', context)
+
+#     except Exception as e:
+#         messages.error(request, "Payment gateway is currently unavailable.")
+#         return redirect('found:user_dashboard')
+
 @login_required
 def payment_view(request, match_id):
-    """Initiates the Razorpay order and sends the correct context to the template."""
     match = get_object_or_404(Match, pk=match_id)
 
-    # 1. Security Check
     if request.user != match.lost_item.reporter:
         messages.error(request, "Only the item owner can make this payment.")
         return redirect('found:user_dashboard')
 
-    # 2. Check if reward exists
     if not match.lost_item.reward_amount or match.lost_item.reward_amount <= 0:
         messages.error(request, "No reward amount set for this item.")
         return redirect('found:user_dashboard')
 
-    # 3. Razorpay Integration
-    amount_in_paise = int(match.lost_item.reward_amount * 100) # Required for API
-    
-    try:
-        # Create official Razorpay Order
-        order_data = {
-            "amount": amount_in_paise,
-            "currency": "INR",
-            "payment_capture": "1" 
-        }
-        razorpay_order = client.order.create(data=order_data)
+    amount_in_paise = int(match.lost_item.reward_amount * 100)
 
-        context = {
-            'match': match,
-            'finder': match.found_item.reporter,
-            'razorpay_order_id': razorpay_order['id'],
-            'razorpay_merchant_key': settings.RAZORPAY_KEY_ID,
-            'amount': amount_in_paise, 
-        }
-        return render(request, 'core/payment.html', context)
+    # Try Razorpay if keys exist
+    razorpay_order_id = None
+    client = get_razorpay_client()
 
-    except Exception as e:
-        messages.error(request, "Payment gateway is currently unavailable.")
-        return redirect('found:user_dashboard')
+    if client:
+        try:
+            order_data = {
+                "amount": amount_in_paise,
+                "currency": "INR",
+                "payment_capture": "1"
+            }
+            razorpay_order = client.order.create(data=order_data)
+            razorpay_order_id = razorpay_order['id']
+        except Exception as e:
+            print(f"Razorpay order creation failed: {e}")
 
+    context = {
+        'match': match,
+        'finder': match.found_item.reporter,
+        'razorpay_order_id': razorpay_order_id or 'demo_order_id',
+        'razorpay_merchant_key': settings.RAZORPAY_KEY_ID or 'demo_key',
+        'amount': amount_in_paise,
+    }
+    return render(request, 'core/payment.html', context)
 
 @csrf_exempt
 def process_payment_view(request, match_id):
